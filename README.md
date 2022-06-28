@@ -8,7 +8,7 @@ A command line tool which can convert formats:
 
 ```bash
 $ convfmt < cfg.json > cfg.yml --from json --to yaml
-$ convfmt < cfg.toml > cfg.json --from toml --to json --compact
+$ cat cfg.toml | convfmt -f toml -t json --compact > cfg.json
 ```
 
 Some formats allow to use `compact` and `pretty`(default) options
