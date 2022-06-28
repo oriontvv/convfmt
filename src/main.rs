@@ -17,7 +17,7 @@ struct CliArgs {
     compact: bool,
 }
 
-#[derive(Debug, clap::ValueEnum, Clone)]
+#[derive(Debug, Clone, PartialEq, clap::ValueEnum)]
 enum Format {
     Json,
     Yaml,
@@ -67,6 +67,10 @@ fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<String>
 fn run_app() -> Result<()> {
     let args = CliArgs::parse();
     let input = read_input()?;
+    if args.from == args.to {
+        write_output(&input)?;
+        return Ok(());
+    }
     let value = load_input(&input, args.from)?;
     let output = dump_value(&value, args.to, args.compact)?;
     write_output(&output)?;
@@ -198,7 +202,7 @@ the_answer: 42
         r#"{"array":["a","b"],"compact":false,"the_answer":42}"#,
         true
     )]
-    fn test_convert_json_to_yaml(
+    fn test_convert_formats(
         #[case] from_format: Format,
         #[case] input: &str,
         #[case] to_format: Format,
