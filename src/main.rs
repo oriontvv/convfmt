@@ -1,4 +1,4 @@
-use std::io::{self, BufReader, BufWriter, Read, Write};
+use std::io::{self, Read, Write};
 
 use anyhow::Result;
 use clap::Parser;
@@ -34,14 +34,20 @@ enum Value {
 
 fn read_input() -> Result<String> {
     let mut buf = String::new();
-    let mut reader = BufReader::new(io::stdin());
-    reader.read_to_string(&mut buf)?;
+    let stdin = io::stdin();
+    {
+        let mut handle = stdin.lock();
+        handle.read_to_string(&mut buf)?;
+    }
     Ok(buf)
 }
 
 fn write_output(output: &str) -> Result<()> {
-    let mut writer = BufWriter::new(io::stdout());
-    writer.write_all(output.as_bytes())?;
+    let stdout = io::stdout();
+    {
+        let mut handle = stdout.lock();
+        handle.write_all(output.as_bytes())?
+    }
     Ok(())
 }
 
@@ -67,10 +73,6 @@ fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<String>
 fn run_app() -> Result<()> {
     let args = CliArgs::parse();
     let input = read_input()?;
-    if args.from == args.to {
-        write_output(&input)?;
-        return Ok(());
-    }
     let value = load_input(&input, args.from)?;
     let output = dump_value(&value, args.to, args.compact)?;
     write_output(&output)?;
