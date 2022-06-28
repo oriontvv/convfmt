@@ -86,28 +86,128 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    use rstest::rstest;
+
     use super::*;
 
-    #[test]
-    fn test_convert_json_to_yaml() {
-        let input = r#"
+    #[rstest]
+    #[case(
+        Format::Json,
+        r#"
 {
-    "array": ["a", "b", "c"],
+    "array": ["a", "b"],
     "the_answer": 42,
     "compact": false
-}"#;
-
-        let expected_output = r#"---
+}"#,
+        Format::Yaml,
+        r#"---
 array:
   - a
   - b
-  - c
 compact: false
 the_answer: 42
-"#;
-
-        let value = load_input(input, Format::Json).unwrap();
-        let output = dump_value(&value, Format::Yaml, false).unwrap();
+"#,
+        false
+    )]
+    #[case(
+        Format::Json,
+        r#"
+{
+    "array": ["a", "b"],
+    "the_answer": 42,
+    "compact": false
+}"#,
+        Format::Toml,
+        r#"array = ["a", "b"]
+compact = false
+the_answer = 42
+"#,
+        false
+    )]
+    #[case(
+        Format::Yaml,
+        r#"---
+array:
+  - a
+  - b
+compact: false
+the_answer: 42
+"#,
+        Format::Json,
+        r#"{
+  "array": [
+    "a",
+    "b"
+  ],
+  "compact": false,
+  "the_answer": 42
+}"#,
+        false
+    )]
+    #[case(
+        Format::Yaml,
+        r#"---
+array:
+  - a
+  - b
+compact: false
+the_answer: 42
+"#,
+        Format::Json,
+        r#"{"array":["a","b"],"compact":false,"the_answer":42}"#,
+        true
+    )]
+    #[case(
+        Format::Yaml,
+        r#"---
+array:
+  - a
+  - b
+compact: false
+the_answer: 42
+"#,
+        Format::Toml,
+        r#"array = ["a", "b"]
+compact = false
+the_answer = 42
+"#,
+        false
+    )]
+    #[case(
+        Format::Toml,
+        r#"array = ["a", "b"]
+        compact = false
+        the_answer = 42
+        "#,
+        Format::Yaml,
+        r#"---
+array:
+  - a
+  - b
+compact: false
+the_answer: 42
+"#,
+        false
+    )]
+    #[case(
+        Format::Toml,
+        r#"array = ["a", "b"]
+        compact = false
+        the_answer = 42
+        "#,
+        Format::Json,
+        r#"{"array":["a","b"],"compact":false,"the_answer":42}"#,
+        true
+    )]
+    fn test_convert_json_to_yaml(
+        #[case] from_format: Format,
+        #[case] input: &str,
+        #[case] to_format: Format,
+        #[case] expected_output: &str,
+        #[case] is_compact: bool,
+    ) {
+        let value = load_input(input, from_format).unwrap();
+        let output = dump_value(&value, to_format, is_compact).unwrap();
 
         assert_eq!(output, expected_output);
     }
