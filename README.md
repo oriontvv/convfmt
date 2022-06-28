@@ -9,8 +9,9 @@
 ## Usage:
 
 ```bash
-$ convfmt < cfg.json > cfg.yml --from json --to yaml
+$ convfmt < cfg.yml > cfg.toml --from yaml --to toml
 $ cat cfg.toml | convfmt -f toml -t json --compact > cfg.json
+$ curl https://api.github.com/users/oriontvv | convfmt --from json --to yaml
 ```
 
 Some formats allow to use `compact` and `pretty`(default) options
