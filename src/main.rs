@@ -24,24 +24,12 @@ enum Format {
     Toml,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
+#[serde(untagged)]
 enum Value {
     Json(serde_json::Value),
     Toml(toml::Value),
     Yaml(serde_yaml::Value),
-}
-
-impl Serialize for Value {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        match &self {
-            Value::Json(value) => value.serialize(serializer),
-            Value::Toml(value) => value.serialize(serializer),
-            Value::Yaml(value) => value.serialize(serializer),
-        }
-    }
 }
 
 fn read_input() -> String {
