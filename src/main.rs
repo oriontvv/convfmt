@@ -32,11 +32,11 @@ enum Value {
     Yaml(serde_yaml::Value),
 }
 
-fn read_input() -> String {
+fn read_input() -> Result<String> {
     let mut buf = String::new();
     let mut reader = BufReader::new(io::stdin());
-    reader.read_to_string(&mut buf).expect("Can't read input");
-    buf
+    reader.read_to_string(&mut buf)?;
+    Ok(buf)
 }
 
 fn write_output(output: &str) -> Result<()> {
@@ -64,12 +64,23 @@ fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<String>
     Ok(dumped)
 }
 
-fn main() {
+fn run_app() -> Result<()> {
     let args = CliArgs::parse();
-    let input = read_input();
-    let value = load_input(&input, args.from).expect("Can't deserialize input");
-    let output = dump_value(&value, args.to, args.compact).expect("Can't serialize");
-    write_output(&output).expect("Can't write output");
+    let input = read_input()?;
+    let value = load_input(&input, args.from)?;
+    let output = dump_value(&value, args.to, args.compact)?;
+    write_output(&output)?;
+    Ok(())
+}
+
+fn main() {
+    std::process::exit(match run_app() {
+        Ok(_) => 0,
+        Err(err) => {
+            eprintln!("Error: {err:?}");
+            1
+        }
+    });
 }
 
 #[cfg(test)]
