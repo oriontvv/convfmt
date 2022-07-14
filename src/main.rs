@@ -125,6 +125,24 @@ the_answer: 42
 compact = false
 the_answer = 42
 "#,
+        true
+    )]
+    #[case(
+        Format::Json,
+        r#"
+{
+    "array": ["a", "b"],
+    "the_answer": 42,
+    "compact": false
+}"#,
+        Format::Toml,
+        r#"array = [
+    'a',
+    'b',
+]
+compact = false
+the_answer = 42
+"#,
         false
     )]
     #[case(
@@ -174,7 +192,7 @@ the_answer: 42
 compact = false
 the_answer = 42
 "#,
-        false
+        true
     )]
     #[case(
         Format::Toml,
