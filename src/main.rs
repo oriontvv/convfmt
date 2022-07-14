@@ -65,7 +65,8 @@ fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<String>
         (Format::Json, true) => serde_json::to_string::<Value>(value)?,
         (Format::Json, false) => serde_json::to_string_pretty::<Value>(value)?,
         (Format::Yaml, _) => serde_yaml::to_string::<Value>(value)?,
-        (Format::Toml, _) => toml::to_string::<Value>(value)?,
+        (Format::Toml, true) => toml::to_string::<Value>(value)?,
+        (Format::Toml, false) => toml::to_string_pretty::<Value>(value)?,
     };
     Ok(dumped)
 }
@@ -80,13 +81,10 @@ fn run_app() -> Result<()> {
 }
 
 fn main() {
-    std::process::exit(match run_app() {
-        Ok(_) => 0,
-        Err(err) => {
-            eprintln!("Error: {err:?}");
-            1
-        }
-    });
+    if let Err(err) = run_app() {
+        eprintln!("Error: {err:?}");
+        std::process::exit(1);
+    }
 }
 
 #[cfg(test)]
