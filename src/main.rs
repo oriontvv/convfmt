@@ -17,12 +17,13 @@ struct CliArgs {
     compact: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, clap::ValueEnum)]
+#[derive(Debug, Copy, Clone, PartialEq, clap::ValueEnum)]
 enum Format {
     Json,
     Yaml,
     Toml,
     Ron,
+    Cbor,
 }
 
 #[derive(Debug, Serialize)]
@@ -32,48 +33,48 @@ enum Value {
     Toml(toml::Value),
     Yaml(serde_yaml::Value),
     Ron(ron::Value),
+    Cbor(serde_cbor::Value),
 }
 
-fn read_input() -> Result<String> {
-    let mut buf = String::new();
+fn read_input() -> Result<Vec<u8>> {
+    let mut buf = vec![];
     let stdin = io::stdin();
-    {
-        let mut handle = stdin.lock();
-        handle.read_to_string(&mut buf)?;
-    }
+    let mut handle = stdin.lock();
+    handle.read_to_end(&mut buf)?;
     Ok(buf)
 }
 
-fn write_output(output: &str) -> Result<()> {
+fn write_output(output: &[u8]) -> Result<()> {
     let stdout = io::stdout();
-    {
-        let mut handle = stdout.lock();
-        handle.write_all(output.as_bytes())?
-    }
+    let mut handle = stdout.lock();
+    handle.write_all(output)?;
     Ok(())
 }
 
-fn load_input(input: &str, format: Format) -> Result<Value> {
+fn load_input(input: &[u8], format: Format) -> Result<Value> {
     let value = match format {
-        Format::Json => Value::Json(serde_json::from_str::<serde_json::Value>(input)?),
-        Format::Yaml => Value::Yaml(serde_yaml::from_str::<serde_yaml::Value>(input)?),
-        Format::Toml => Value::Toml(toml::from_str::<toml::Value>(input)?),
-        Format::Ron => Value::Ron(ron::from_str::<ron::Value>(input)?),
+        Format::Json => Value::Json(serde_json::from_slice::<serde_json::Value>(input)?),
+        Format::Yaml => Value::Yaml(serde_yaml::from_slice::<serde_yaml::Value>(input)?),
+        Format::Toml => Value::Toml(toml::from_slice::<toml::Value>(input)?),
+        Format::Ron => Value::Ron(ron::de::from_bytes::<ron::Value>(input)?),
+        Format::Cbor => Value::Cbor(serde_cbor::from_slice(input)?),
     };
     Ok(value)
 }
 
-fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<String> {
-    let dumped: String = match (format, is_compact) {
-        (Format::Json, true) => serde_json::to_string::<Value>(value)?,
-        (Format::Json, false) => serde_json::to_string_pretty::<Value>(value)?,
-        (Format::Yaml, _) => serde_yaml::to_string::<Value>(value)?,
-        (Format::Toml, true) => toml::to_string::<Value>(value)?,
-        (Format::Toml, false) => toml::to_string_pretty::<Value>(value)?,
-        (Format::Ron, true) => ron::ser::to_string::<Value>(value)?,
+fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec<u8>> {
+    let dumped: Vec<u8> = match (format, is_compact) {
+        (Format::Json, true) => serde_json::to_vec::<Value>(value)?,
+        (Format::Json, false) => serde_json::to_vec_pretty::<Value>(value)?,
+        (Format::Yaml, _) => serde_yaml::to_vec::<Value>(value)?,
+        (Format::Toml, true) => toml::to_vec::<Value>(value)?,
+        (Format::Toml, false) => toml::to_string_pretty::<Value>(value).map(|e| e.into_bytes())?,
+        (Format::Ron, true) => ron::ser::to_string::<Value>(value).map(|e| e.into_bytes())?,
         (Format::Ron, false) => {
-            ron::ser::to_string_pretty::<Value>(value, ron::ser::PrettyConfig::default())?
+            ron::ser::to_string_pretty::<Value>(value, ron::ser::PrettyConfig::default())
+                .map(|e| e.into_bytes())?
         }
+        (Format::Cbor, _) => serde_cbor::to_vec(value)?,
     };
     Ok(dumped)
 }
@@ -100,170 +101,79 @@ mod tests {
 
     use super::*;
 
-    #[rstest]
-    #[case(
-        Format::Json,
-        r#"
-{
-    "array": ["a", "b"],
-    "the_answer": 42,
-    "compact": false
-}"#,
-        Format::Yaml,
-        r#"---
-array:
-  - a
-  - b
-compact: false
-the_answer: 42
-"#,
-        false
-    )]
-    #[case(
-        Format::Json,
-        r#"
-{
-    "array": ["a", "b"],
-    "the_answer": 42,
-    "compact": false
-}"#,
-        Format::Toml,
-        r#"array = ["a", "b"]
-compact = false
-the_answer = 42
-"#,
-        true
-    )]
-    #[case(
-        Format::Json,
-        r#"
-{
-    "array": ["a", "b"],
-    "the_answer": 42,
-    "compact": false
-}"#,
-        Format::Toml,
-        r#"array = [
-    'a',
-    'b',
-]
-compact = false
-the_answer = 42
-"#,
-        false
-    )]
-    #[case(
-        Format::Yaml,
-        r#"---
-array:
-  - a
-  - b
-compact: false
-the_answer: 42
-"#,
-        Format::Json,
-        r#"{
+    fn get_test_value(format: Format, is_compact: bool) -> String {
+        match (format, is_compact) {
+            (Format::Json, true) => {
+                r#"{"array":["a","b"],"boolean":false,"the_answer":42}"#.to_string()
+            }
+            (Format::Json, false) => r#"{
   "array": [
     "a",
     "b"
   ],
-  "compact": false,
+  "boolean": false,
   "the_answer": 42
-}"#,
-        false
-    )]
-    #[case(
-        Format::Yaml,
-        r#"---
+}"#
+            .to_string(),
+            (Format::Yaml, _) => r#"---
 array:
   - a
   - b
-compact: false
+boolean: false
 the_answer: 42
-"#,
-        Format::Json,
-        r#"{"array":["a","b"],"compact":false,"the_answer":42}"#,
-        true
-    )]
-    #[case(
-        Format::Yaml,
-        r#"---
-array:
-  - a
-  - b
-compact: false
-the_answer: 42
-"#,
-        Format::Toml,
-        r#"array = ["a", "b"]
-compact = false
+"#
+            .to_string(),
+            (Format::Toml, true) => r#"array = ["a", "b"]
+boolean = false
 the_answer = 42
-"#,
-        true
-    )]
-    #[case(
-        Format::Toml,
-        r#"array = ["a", "b"]
-        compact = false
-        the_answer = 42
-        "#,
-        Format::Yaml,
-        r#"---
-array:
-  - a
-  - b
-compact: false
-the_answer: 42
-"#,
-        false
-    )]
-    #[case(
-        Format::Toml,
-        r#"array = ["a", "b"]
-        compact = false
-        the_answer = 42
-        "#,
-        Format::Json,
-        r#"{"array":["a","b"],"compact":false,"the_answer":42}"#,
-        true
-    )]
-    #[case(
-        Format::Json,
-        r#"{"array":["a","b"],"compact":false,"the_answer":42}"#,
-        Format::Ron,
-        r#"{"array":["a","b"],"compact":false,"the_answer":42}"#,
-        true
-    )]
-    #[case(
-        Format::Json,
-        r#"{"array":["a","b"],"compact":false,"the_answer":42}"#,
-        Format::Ron,
-        r#"{
+"#
+            .to_string(),
+            (Format::Toml, false) => r#"array = [
+    'a',
+    'b',
+]
+boolean = false
+the_answer = 42
+"#
+            .to_string(),
+            (Format::Ron, true) => {
+                r#"{"array":["a","b"],"boolean":false,"the_answer":42}"#.to_string()
+            }
+            (Format::Ron, false) => r#"{
     "array": [
         "a",
         "b",
     ],
-    "compact": false,
+    "boolean": false,
     "the_answer": 42,
-}"#,
-        false
-    )]
-    #[case(
-        Format::Ron,
-        r#"{"array":["a","b",],"compact":false,"the_answer":42,}"#,
-        Format::Json,
-        r#"{"array":["a","b"],"compact":false,"the_answer":42}"#,
-        true
-    )]
+}"#
+            .to_string(),
+            (Format::Cbor, _) => todo!(),
+        }
+    }
+
+    #[rstest]
+    #[case(Format::Json, Format::Yaml, false)]
+    #[case(Format::Json, Format::Toml, true)]
+    #[case(Format::Json, Format::Toml, false)]
+    #[case(Format::Yaml, Format::Json, false)]
+    #[case(Format::Yaml, Format::Json, true)]
+    #[case(Format::Yaml, Format::Toml, true)]
+    #[case(Format::Toml, Format::Yaml, false)]
+    #[case(Format::Toml, Format::Json, true)]
+    #[case(Format::Json, Format::Ron, true)]
+    #[case(Format::Json, Format::Ron, false)]
+    #[case(Format::Ron, Format::Json, true)]
     fn test_convert_formats(
         #[case] from_format: Format,
-        #[case] input: &str,
         #[case] to_format: Format,
-        #[case] expected_output: &str,
         #[case] is_compact: bool,
     ) {
-        let value = load_input(input, from_format).unwrap();
-        let output = dump_value(&value, to_format, is_compact).unwrap();
+        let input = get_test_value(from_format, is_compact);
+        let expected_output = get_test_value(to_format, is_compact);
+
+        let value = load_input(input.as_bytes(), from_format).unwrap();
+        let output = String::from_utf8(dump_value(&value, to_format, is_compact).unwrap()).unwrap();
 
         assert_eq!(output, expected_output);
     }

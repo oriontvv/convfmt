@@ -1,6 +1,7 @@
 # 0.1.2 ()
 * add support of `compact` option for toml
 * add `ron` format
+* add `cbor` format
 
 # 0.1.1 (2022-06-28)
 
