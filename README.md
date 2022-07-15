@@ -2,9 +2,10 @@
 [![Actions Status](https://github.com/oriontvv/convfmt/workflows/CI/badge.svg)](https://github.com/oriontvv/convfmt/actions) [![dependency status](https://deps.rs/repo/github/oriontvv/convfmt/status.svg)](https://deps.rs/repo/github/oriontvv/convfmt) [![Crates.io](https://img.shields.io/crates/v/convfmt.svg)](https://crates.io/crates/convfmt)
 
 [convfmt](https://github.com/oriontvv/convfmt) is a command line tool which can convert between formats:
-* json
-* yaml
-* toml
+* [json](https://en.wikipedia.org/wiki/JSON)
+* [yaml](https://en.wikipedia.org/wiki/YAML)
+* [toml](https://en.wikipedia.org/wiki/TOML)
+* [ron](https://github.com/ron-rs/ron)
 
 ## Usage:
 

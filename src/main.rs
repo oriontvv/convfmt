@@ -22,6 +22,7 @@ enum Format {
     Json,
     Yaml,
     Toml,
+    Ron,
 }
 
 #[derive(Debug, Serialize)]
@@ -30,6 +31,7 @@ enum Value {
     Json(serde_json::Value),
     Toml(toml::Value),
     Yaml(serde_yaml::Value),
+    Ron(ron::Value),
 }
 
 fn read_input() -> Result<String> {
@@ -56,6 +58,7 @@ fn load_input(input: &str, format: Format) -> Result<Value> {
         Format::Json => Value::Json(serde_json::from_str::<serde_json::Value>(input)?),
         Format::Yaml => Value::Yaml(serde_yaml::from_str::<serde_yaml::Value>(input)?),
         Format::Toml => Value::Toml(toml::from_str::<toml::Value>(input)?),
+        Format::Ron => Value::Ron(ron::from_str::<ron::Value>(input)?),
     };
     Ok(value)
 }
@@ -67,6 +70,10 @@ fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<String>
         (Format::Yaml, _) => serde_yaml::to_string::<Value>(value)?,
         (Format::Toml, true) => toml::to_string::<Value>(value)?,
         (Format::Toml, false) => toml::to_string_pretty::<Value>(value)?,
+        (Format::Ron, true) => ron::ser::to_string::<Value>(value)?,
+        (Format::Ron, false) => {
+            ron::ser::to_string_pretty::<Value>(value, ron::ser::PrettyConfig::default())?
+        }
     };
     Ok(dumped)
 }
@@ -216,6 +223,34 @@ the_answer: 42
         compact = false
         the_answer = 42
         "#,
+        Format::Json,
+        r#"{"array":["a","b"],"compact":false,"the_answer":42}"#,
+        true
+    )]
+    #[case(
+        Format::Json,
+        r#"{"array":["a","b"],"compact":false,"the_answer":42}"#,
+        Format::Ron,
+        r#"{"array":["a","b"],"compact":false,"the_answer":42}"#,
+        true
+    )]
+    #[case(
+        Format::Json,
+        r#"{"array":["a","b"],"compact":false,"the_answer":42}"#,
+        Format::Ron,
+        r#"{
+    "array": [
+        "a",
+        "b",
+    ],
+    "compact": false,
+    "the_answer": 42,
+}"#,
+        false
+    )]
+    #[case(
+        Format::Ron,
+        r#"{"array":["a","b",],"compact":false,"the_answer":42,}"#,
         Format::Json,
         r#"{"array":["a","b"],"compact":false,"the_answer":42}"#,
         true
