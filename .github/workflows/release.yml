@@ -7,133 +7,90 @@ on:
       - '*.*.*'
 
 jobs:
-  release-crates:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: publish package to crates
-        run: |
-          cargo package
-          cargo publish --token ${{ secrets.CARGO_TOKEN }}
-
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Install latest rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          default: true
-          override: true
-      
-      - name: Build
-        run: cargo build --all --release && strip target/release/convfmt && mv target/release/convfmt target/release/convfmt_amd64
-
-      - name: Upload binary
-        uses: actions/upload-artifact@v3
-        with:
-          name: convfmt_amd64
-          path: target/release/convfmt_amd64
-
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: |
-            target/release/convfmt_amd_64
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload binary
-        uses: svenstaro/upload-release-action@v1-release
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/convfmt_amd64
-          asset_name: convfmt_amd64
-          tag: ${{ github.ref }}
-          overwrite: true
-
-  build-win:
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      
-      - name: Install latest rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          default: true
-          override: true
-
-      - name: Build
-        run: cargo build --all --release
-      
-      - name: Upload binary
-        uses: actions/upload-artifact@v3
-        with:
-          name: convfmt.exe
-          path: target/release/convfmt.exe
-
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: target/release/convfmt.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Upload binary
-        uses: svenstaro/upload-release-action@v1-release
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/convfmt.exe
-          asset_name: convfmt.exe
-          tag: ${{ github.ref }}
-          overwrite: true
-  
-  build-mac:
-    runs-on: macos-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Install latest rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: x86_64-apple-darwin
-          default: true
-
-      - name: Build for mac
-        run: cargo build --all --release && strip target/release/convfmt && mv target/release/convfmt target/release/convfmt_darwin
-
-      - name: Upload binary
-        uses: actions/upload-artifact@v3
-        with:
-          name: convfmt_darwin
-          path: target/release/convfmt_darwin
-
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: |
-            target/release/convfmt_darwin
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     
-      - name: Upload binary
-        uses: svenstaro/upload-release-action@v1-release
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/convfmt_darwin
-          asset_name: convfmt_darwin
-          tag: ${{ github.ref }}
-          overwrite: true
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Get version
+      id: get_version
+      run: echo ::set-output name=version::${GITHUB_REF/refs\/tags\//}
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        components: clippy
+
+    - name: New Resolver
+      run: |
+        cargo install cargo-modify --force
+        cargo modify new-resolver
+    - name: Build
+      run: cargo build
+    - name: Run tests
+      run: make test
+    - name: Run clippy
+      run: |
+        cargo clean
+        make clippy
+    - name: Setup MUSL
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        rustup target add x86_64-unknown-linux-musl
+        sudo apt-get -qq install musl-tools
+    - name: Build Release Mac
+      if: matrix.os == 'macos-latest'
+      run: make release-mac
+    - name: Build Release Linux
+      if: matrix.os == 'ubuntu-latest'
+      run: make release-linux-musl
+    - name: Build Release Win
+      if: matrix.os == 'windows-latest'
+      run: make release-win
+
+    - name: Set SHA
+      if: matrix.os == 'macos-latest'
+      id: shasum
+      run: |
+        echo ::set-output name=sha::"$(shasum -a 256 ./release/convfmt-mac.tar.gz | awk '{printf $1}')"
+    - name: Extract release notes
+      if: matrix.os == 'ubuntu-latest'
+      id: release_notes
+      uses: ffurrer2/extract-release-notes@v1
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        body: ${{ steps.release_notes.outputs.release_notes }}
+        prerelease: ${{ contains(github.ref, '-') }}
+        files: |
+          ./release/*.tar.gz
+          ./release/*.zip
+          ./release/*.msi
+          
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # - name: Bump personal tap formula
+    #   uses: mislav/bump-homebrew-formula-action@v1
+    #   if: "matrix.os == 'macos-latest' && !contains(github.ref, '-')" # skip prereleases
+    #   env:
+    #     COMMITTER_TOKEN: ${{ secrets.BREW_TOKEN }}
+    #   with:
+    #     formula-name: convfmt
+    #     homebrew-tap: oriontvv/tap
+    #     download-url: https://github.com/oriontvv/convfmt/releases/download/${{ steps.get_version.outputs.version }}/convfmt-mac.tar.gz
+
+    - name: Bump homebrew-core formula
+      uses: mislav/bump-homebrew-formula-action@v1
+      if: "matrix.os == 'macos-latest' && !contains(github.ref, '-')" # skip prereleases
+      env:
+        COMMITTER_TOKEN: ${{ secrets.BREW_TOKEN }}
+      with:
+        formula-name: convfmt
