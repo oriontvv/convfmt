@@ -2,6 +2,9 @@ name: CI
 
 on: [push, pull_request]
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -84,19 +87,11 @@ jobs:
           command: clippy
           args: -- -D warnings
 
-  # doc:
-  #   name: Build documentation
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     RUSTDOCFLAGS: --cfg docsrs
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - uses: actions-rs/toolchain@v1
-  #       with:
-  #         profile: minimal
-  #         toolchain: nightly
-  #         override: true
-  #     - uses: actions-rs/cargo@v1
-  #       with:
-  #         command: doc
-  #         args: --workspace --no-deps --all-features
+  sec:
+    name: Security audit
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions-rs/audit-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
