@@ -24,6 +24,7 @@ enum Format {
     Toml,
     Ron,
     Cbor,
+    Json5,
 }
 
 #[derive(Debug, Serialize)]
@@ -34,6 +35,7 @@ enum Value {
     Yaml(serde_yaml::Value),
     Ron(ron::Value),
     Cbor(serde_cbor::Value),
+    Json5(serde_json::Value),
 }
 
 fn read_input() -> Result<Vec<u8>> {
@@ -58,6 +60,10 @@ fn load_input(input: &[u8], format: Format) -> Result<Value> {
         Format::Toml => Value::Toml(toml::from_slice::<toml::Value>(input)?),
         Format::Ron => Value::Ron(ron::de::from_bytes::<ron::Value>(input)?),
         Format::Cbor => Value::Cbor(serde_cbor::from_slice(input)?),
+        Format::Json5 => {
+            let s = std::str::from_utf8(input)?;
+            Value::Json5(serde_json::from_str::<serde_json::Value>(s)?)
+        }
     };
     Ok(value)
 }
@@ -75,6 +81,7 @@ fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec<u8>
                 .map(|e| e.into_bytes())?
         }
         (Format::Cbor, _) => serde_cbor::to_vec(value)?,
+        (Format::Json5, _) => json5::to_string::<Value>(value).map(|e| e.into_bytes())?,
     };
     Ok(dumped)
 }
@@ -149,6 +156,9 @@ the_answer = 42
 }"#
             .to_string(),
             (Format::Cbor, _) => todo!(),
+            (Format::Json5, _) => {
+                r#"{"array":["a","b"],"boolean":false,"the_answer":42}"#.to_string()
+            }
         }
     }
 
@@ -164,6 +174,10 @@ the_answer = 42
     #[case(Format::Json, Format::Ron, true)]
     #[case(Format::Json, Format::Ron, false)]
     #[case(Format::Ron, Format::Json, true)]
+    #[case(Format::Json5, Format::Json, true)]
+    #[case(Format::Json, Format::Json5, true)]
+    #[case(Format::Json, Format::Json5, false)]
+    #[case(Format::Json5, Format::Json, false)]
     fn test_convert_formats(
         #[case] from_format: Format,
         #[case] to_format: Format,
