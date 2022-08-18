@@ -6,7 +6,6 @@
 * [yaml](https://en.wikipedia.org/wiki/YAML)
 * [toml](https://en.wikipedia.org/wiki/TOML)
 * [ron](https://github.com/ron-rs/ron)
-* [cbor](https://en.wikipedia.org/wiki/CBOR)
 * [json5](https://en.wikipedia.org/wiki/JSON5)
 
 ## Usage:
@@ -32,5 +31,4 @@ This tool stands on the shoulders of such giants:
 * [serde_yaml](https://crates.io/crates/serde_yaml)
 * [toml-rs](https://crates.io/crates/toml)
 * [ron](https://crates.io/crates/ron)
-* [serde_cbor](https://crates.io/crates/serde_cbor)
 * [json5](https://crates.io/crates/json5)
