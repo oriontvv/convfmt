@@ -23,7 +23,6 @@ enum Format {
     Yaml,
     Toml,
     Ron,
-    Cbor,
     Json5,
 }
 
@@ -34,7 +33,6 @@ enum Value {
     Toml(toml::Value),
     Yaml(serde_yaml::Value),
     Ron(ron::Value),
-    Cbor(serde_cbor::Value),
     Json5(serde_json::Value),
 }
 
@@ -59,7 +57,6 @@ fn load_input(input: &[u8], format: Format) -> Result<Value> {
         Format::Yaml => Value::Yaml(serde_yaml::from_slice::<serde_yaml::Value>(input)?),
         Format::Toml => Value::Toml(toml::from_slice::<toml::Value>(input)?),
         Format::Ron => Value::Ron(ron::de::from_bytes::<ron::Value>(input)?),
-        Format::Cbor => Value::Cbor(serde_cbor::from_slice(input)?),
         Format::Json5 => {
             let s = std::str::from_utf8(input)?;
             Value::Json5(serde_json::from_str::<serde_json::Value>(s)?)
@@ -80,7 +77,6 @@ fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec<u8>
             ron::ser::to_string_pretty::<Value>(value, ron::ser::PrettyConfig::default())
                 .map(|e| e.into_bytes())?
         }
-        (Format::Cbor, _) => serde_cbor::to_vec(value)?,
         (Format::Json5, _) => json5::to_string::<Value>(value).map(|e| e.into_bytes())?,
     };
     Ok(dumped)
@@ -155,7 +151,6 @@ the_answer = 42
     "the_answer": 42,
 }"#
             .to_string(),
-            (Format::Cbor, _) => todo!(),
             (Format::Json5, _) => {
                 r#"{"array":["a","b"],"boolean":false,"the_answer":42}"#.to_string()
             }
