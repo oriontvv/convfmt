@@ -7,17 +7,18 @@
 * [toml](https://en.wikipedia.org/wiki/TOML)
 * [ron](https://github.com/ron-rs/ron)
 * [cbor](https://en.wikipedia.org/wiki/CBOR)
+* [json5](https://en.wikipedia.org/wiki/JSON5)
 
 ## Usage:
 
 ```bash
 $ cat cfg.toml | convfmt -f toml -t yaml > cfg.yml
 $ convfmt -f json -t json < compact.json > pretty.json
-$ curl https://api.github.com/users/oriontvv | convfmt -f json -t cbor > api.cbor
+$ curl https://api.github.com/users/oriontvv | convfmt -f json -t json5 > api.json5
 ```
 
-By default `convfmt` uses `pretty` format, but it can be disabled with `--compact` option.
-Beware `null`s, some formats dont support them (e.g. toml).
+By default `convfmt` uses `pretty` format(can be disabled with `--compact` option).
+Beware of `null`s, some formats don't support them (e.g. toml).
 
 ## Installation:
 ```
@@ -32,3 +33,4 @@ This tool stands on the shoulders of such giants:
 * [toml-rs](https://crates.io/crates/toml)
 * [ron](https://crates.io/crates/ron)
 * [serde_cbor](https://crates.io/crates/serde_cbor)
+* [json5](https://crates.io/crates/json5)
