@@ -69,7 +69,7 @@ fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec<u8>
     let dumped: Vec<u8> = match (format, is_compact) {
         (Format::Json, true) => serde_json::to_vec::<Value>(value)?,
         (Format::Json, false) => serde_json::to_vec_pretty::<Value>(value)?,
-        (Format::Yaml, _) => serde_yaml::to_vec::<Value>(value)?,
+        (Format::Yaml, _) => serde_yaml::to_string::<Value>(value).map(|e| e.into_bytes())?,
         (Format::Toml, true) => toml::to_vec::<Value>(value)?,
         (Format::Toml, false) => toml::to_string_pretty::<Value>(value).map(|e| e.into_bytes())?,
         (Format::Ron, true) => ron::ser::to_string::<Value>(value).map(|e| e.into_bytes())?,
@@ -118,10 +118,9 @@ mod tests {
   "the_answer": 42
 }"#
             .to_string(),
-            (Format::Yaml, _) => r#"---
-array:
-  - a
-  - b
+            (Format::Yaml, _) => r#"array:
+- a
+- b
 boolean: false
 the_answer: 42
 "#
