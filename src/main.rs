@@ -73,10 +73,11 @@ fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec<u8>
         (Format::Toml, true) => toml::to_vec::<Value>(value)?,
         (Format::Toml, false) => toml::to_string_pretty::<Value>(value).map(|e| e.into_bytes())?,
         (Format::Ron, true) => ron::ser::to_string::<Value>(value).map(|e| e.into_bytes())?,
-        (Format::Ron, false) => {
-            ron::ser::to_string_pretty::<Value>(value, ron::ser::PrettyConfig::default())
-                .map(|e| e.into_bytes())?
-        }
+        (Format::Ron, false) => ron::ser::to_string_pretty::<Value>(
+            value,
+            ron::ser::PrettyConfig::default().new_line("\n".to_owned()),
+        )
+        .map(|e| e.into_bytes())?,
         (Format::Json5, _) => json5::to_string::<Value>(value).map(|e| e.into_bytes())?,
     };
     Ok(dumped)
