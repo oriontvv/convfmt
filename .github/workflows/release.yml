@@ -87,10 +87,10 @@ jobs:
     #     homebrew-tap: oriontvv/tap
     #     download-url: https://github.com/oriontvv/convfmt/releases/download/${{ steps.get_version.outputs.version }}/convfmt-mac.tar.gz
 
-    - name: Bump homebrew-core formula
-      uses: mislav/bump-homebrew-formula-action@v1
-      if: "matrix.os == 'macos-latest' && !contains(github.ref, '-')" # skip prereleases
-      env:
-        COMMITTER_TOKEN: ${{ secrets.BREW_TOKEN }}
-      with:
-        formula-name: convfmt
+    # - name: Bump homebrew-core formula
+    #   uses: mislav/bump-homebrew-formula-action@v1
+    #   if: "matrix.os == 'macos-latest' && !contains(github.ref, '-')" # skip prereleases
+    #   env:
+    #     COMMITTER_TOKEN: ${{ secrets.BREW_TOKEN }}
+    #   with:
+    #     formula-name: convfmt
