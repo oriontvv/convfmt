@@ -5,15 +5,15 @@ use clap::Parser;
 use serde::Serialize;
 
 #[derive(Parser, Debug)]
-#[clap(about, version, author)]
+#[command(about, version, author)]
 struct CliArgs {
-    #[clap(short, long, value_enum)]
+    #[arg(short, long, value_enum)]
     from: Format,
 
-    #[clap(short, long, value_enum)]
+    #[arg(short, long, value_enum)]
     to: Format,
 
-    #[clap(short, long, takes_value = false)]
+    #[arg(short, long)]
     compact: bool,
 }
 
