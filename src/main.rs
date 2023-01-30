@@ -55,7 +55,10 @@ fn load_input(input: &[u8], format: Format) -> Result<Value> {
     let value = match format {
         Format::Json => Value::Json(serde_json::from_slice::<serde_json::Value>(input)?),
         Format::Yaml => Value::Yaml(serde_yaml::from_slice::<serde_yaml::Value>(input)?),
-        Format::Toml => Value::Toml(toml::from_slice::<toml::Value>(input)?),
+        Format::Toml => {
+            let s = std::str::from_utf8(input)?;
+            Value::Toml(toml::from_str::<toml::Value>(s)?)
+        }
         Format::Ron => Value::Ron(ron::de::from_bytes::<ron::Value>(input)?),
         Format::Json5 => {
             let s = std::str::from_utf8(input)?;
@@ -70,7 +73,7 @@ fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec<u8>
         (Format::Json, true) => serde_json::to_vec::<Value>(value)?,
         (Format::Json, false) => serde_json::to_vec_pretty::<Value>(value)?,
         (Format::Yaml, _) => serde_yaml::to_string::<Value>(value).map(|e| e.into_bytes())?,
-        (Format::Toml, true) => toml::to_vec::<Value>(value)?,
+        (Format::Toml, true) => toml::to_string::<Value>(value).map(|e| e.into_bytes())?,
         (Format::Toml, false) => toml::to_string_pretty::<Value>(value).map(|e| e.into_bytes())?,
         (Format::Ron, true) => ron::ser::to_string::<Value>(value).map(|e| e.into_bytes())?,
         (Format::Ron, false) => ron::ser::to_string_pretty::<Value>(
@@ -132,8 +135,8 @@ the_answer = 42
 "#
             .to_string(),
             (Format::Toml, false) => r#"array = [
-    'a',
-    'b',
+    "a",
+    "b",
 ]
 boolean = false
 the_answer = 42
