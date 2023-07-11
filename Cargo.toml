@@ -19,7 +19,7 @@ clap = { version = "4.3.10", features = ["derive"] }
 json5 = "0.4.1"
 ron = "0.8.0"
 serde = { version = "1.0.171", features = ["derive"] }
-serde_json = "1.0.96"
+serde_json = "1.0.100"
 serde_yaml = "0.9.22"
 toml = "0.7.4"
 
