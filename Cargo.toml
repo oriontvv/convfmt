@@ -15,7 +15,7 @@ categories = ["command-line-utilities", "command-line-interface"]
 
 [dependencies]
 anyhow = "1.0.72"
-clap = { version = "4.3.10", features = ["derive"] }
+clap = { version = "4.3.19", features = ["derive"] }
 json5 = "0.4.1"
 ron = "0.8.0"
 serde = { version = "1.0.171", features = ["derive"] }
