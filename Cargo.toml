@@ -14,15 +14,15 @@ categories = ["command-line-utilities", "command-line-interface"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.72"
-clap = { version = "4.3.19", features = ["derive"] }
+anyhow = "1.0.77"
+clap = { version = "4.4.12", features = ["derive"] }
 json5 = "0.4.1"
-ron = "0.8.0"
-serde = { version = "1.0.171", features = ["derive"] }
-serde_json = "1.0.104"
-serde_yaml = "0.9.25"
-toml = "0.7.6"
+ron = "0.8.1"
+serde = { version = "1.0.193", features = ["derive"] }
+serde_json = "1.0.108"
+serde_yaml = "0.9.29"
+toml = "0.8.8"
 
 [dev-dependencies]
-rstest = "0.18.1"
+rstest = "0.18.2"
  
