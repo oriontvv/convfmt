@@ -24,6 +24,7 @@ enum Format {
     Toml,
     Ron,
     Json5,
+    Bson,
 }
 
 #[derive(Debug, Serialize)]
@@ -34,6 +35,7 @@ enum Value {
     Yaml(serde_yaml::Value),
     Ron(ron::Value),
     Json5(serde_json::Value),
+    Bson(bson::Bson),
 }
 
 fn read_input() -> Result<Vec<u8>> {
@@ -53,35 +55,37 @@ fn write_output(output: &[u8]) -> Result<()> {
 
 fn load_input(input: &[u8], format: Format) -> Result<Value> {
     let value = match format {
-        Format::Json => Value::Json(serde_json::from_slice::<serde_json::Value>(input)?),
-        Format::Yaml => Value::Yaml(serde_yaml::from_slice::<serde_yaml::Value>(input)?),
+        Format::Json => Value::Json(serde_json::from_slice(input)?),
+        Format::Yaml => Value::Yaml(serde_yaml::from_slice(input)?),
         Format::Toml => {
             let s = std::str::from_utf8(input)?;
-            Value::Toml(toml::from_str::<toml::Value>(s)?)
+            Value::Toml(toml::from_str(s)?)
         }
-        Format::Ron => Value::Ron(ron::de::from_bytes::<ron::Value>(input)?),
+        Format::Ron => Value::Ron(ron::de::from_bytes(input)?),
         Format::Json5 => {
             let s = std::str::from_utf8(input)?;
-            Value::Json5(serde_json::from_str::<serde_json::Value>(s)?)
+            Value::Json5(serde_json::from_str(s)?)
         }
+        Format::Bson => Value::Bson(bson::from_slice(input)?),
     };
     Ok(value)
 }
 
 fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec<u8>> {
     let dumped: Vec<u8> = match (format, is_compact) {
-        (Format::Json, true) => serde_json::to_vec::<Value>(value)?,
-        (Format::Json, false) => serde_json::to_vec_pretty::<Value>(value)?,
-        (Format::Yaml, _) => serde_yaml::to_string::<Value>(value).map(|e| e.into_bytes())?,
-        (Format::Toml, true) => toml::to_string::<Value>(value).map(|e| e.into_bytes())?,
-        (Format::Toml, false) => toml::to_string_pretty::<Value>(value).map(|e| e.into_bytes())?,
-        (Format::Ron, true) => ron::ser::to_string::<Value>(value).map(|e| e.into_bytes())?,
-        (Format::Ron, false) => ron::ser::to_string_pretty::<Value>(
+        (Format::Json, true) => serde_json::to_vec(value)?,
+        (Format::Json, false) => serde_json::to_vec_pretty(value)?,
+        (Format::Yaml, _) => serde_yaml::to_string(value).map(|e| e.into_bytes())?,
+        (Format::Toml, true) => toml::to_string(value).map(|e| e.into_bytes())?,
+        (Format::Toml, false) => toml::to_string_pretty(value).map(|e| e.into_bytes())?,
+        (Format::Ron, true) => ron::ser::to_string(value).map(|e| e.into_bytes())?,
+        (Format::Ron, false) => ron::ser::to_string_pretty(
             value,
             ron::ser::PrettyConfig::default().new_line("\n".to_owned()),
         )
         .map(|e| e.into_bytes())?,
-        (Format::Json5, _) => json5::to_string::<Value>(value).map(|e| e.into_bytes())?,
+        (Format::Json5, _) => json5::to_string(value).map(|e| e.into_bytes())?,
+        (Format::Bson, _) => bson::to_vec(value)?,
     };
     Ok(dumped)
 }
@@ -157,6 +161,9 @@ the_answer = 42
             (Format::Json5, _) => {
                 r#"{"array":["a","b"],"boolean":false,"the_answer":42}"#.to_string()
             }
+            (Format::Bson, _) => {
+                "A\0\0\0\u{4}array\0\u{17}\0\0\0\u{2}0\0\u{2}\0\0\0a\0\u{2}1\0\u{2}\0\0\0b\0\0\u{8}boolean\0\0\u{12}the_answer\0*\0\0\0\0\0\0\0\0".to_string()
+            }
         }
     }
 
@@ -176,6 +183,8 @@ the_answer = 42
     #[case(Format::Json, Format::Json5, true)]
     #[case(Format::Json, Format::Json5, false)]
     #[case(Format::Json5, Format::Json, false)]
+    #[case(Format::Json, Format::Bson, false)]
+    #[case(Format::Bson, Format::Json5, true)]
     fn test_convert_formats(
         #[case] from_format: Format,
         #[case] to_format: Format,

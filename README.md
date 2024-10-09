@@ -7,6 +7,7 @@
 * [toml](https://en.wikipedia.org/wiki/TOML)
 * [ron](https://github.com/ron-rs/ron)
 * [json5](https://en.wikipedia.org/wiki/JSON5)
+* [bson](https://en.wikipedia.org/wiki/BSON)
 
 ## Usage:
 
@@ -32,3 +33,4 @@ This tool stands on the shoulders of such giants:
 * [toml-rs](https://crates.io/crates/toml)
 * [ron](https://crates.io/crates/ron)
 * [json5](https://crates.io/crates/json5)
+* [bson](https://crates.io/crates/bson)
