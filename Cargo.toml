@@ -25,5 +25,5 @@ serde_yaml = "0.9.29"
 toml = "0.8.19"
 
 [dev-dependencies]
-rstest = "0.18.2"
+rstest = "0.23.0"
  
