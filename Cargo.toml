@@ -21,7 +21,7 @@ json5 = "0.4.1"
 ron = "0.8.1"
 serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.109"
-serde_yaml = "0.9.29"
+serde_yaml = "0.9.34"
 toml = "0.8.19"
 
 [dev-dependencies]
