@@ -62,10 +62,7 @@ fn load_input(input: &[u8], format: Format) -> Result<Value> {
             Value::Toml(toml::from_str(s)?)
         }
         Format::Ron => Value::Ron(ron::de::from_bytes(input)?),
-        Format::Json5 => {
-            let s = std::str::from_utf8(input)?;
-            Value::Json5(serde_json::from_str(s)?)
-        }
+        Format::Json5 => Value::Json5(serde_json::from_slice(input)?),
         Format::Bson => Value::Bson(bson::from_slice(input)?),
     };
     Ok(value)
