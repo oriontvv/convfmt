@@ -48,6 +48,16 @@ test-linux-musl:
 test:
 	cargo test --workspace
 
+coverage:
+	rustup component add llvm-tools-preview
+	cargo install grcov
+	mkdir -p target/coverage
+	export RUSTFLAGS="-Cinstrument-coverage"
+	cargo build
+	LLVM_PROFILE_FILE='target/coverage/%p-%m.profraw' RUSTFLAGS='-C instrument-coverage' cargo test
+	grcov . -s . --binary-path ./target/debug -t html --branch --ignore-not-existing -o ./target/debug/coverage/
+	# open ./target/debug/coverage/index.html
+
 fmt:
 	cargo fmt -- --check
 
