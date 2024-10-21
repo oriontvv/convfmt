@@ -49,3 +49,4 @@ jobs:
           branch: coverage
           create_branch: true
           commit_message: Update coverage
+          push_options: '--force'
