@@ -1,0 +1,51 @@
+name: Coverage
+
+on:
+  push:
+    branches:
+      - 'master'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Cargo update
+        run: cargo update
+      - uses: actions-rs/cargo@v1
+        with:
+          command: check
+
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Test coverage
+        run: make coverage
+
+      - name: Upload coverage results
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          branch: coverage
+          create_branch: true
+          commit_message: Update coverage

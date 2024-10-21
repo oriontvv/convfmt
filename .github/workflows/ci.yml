@@ -45,25 +45,6 @@ jobs:
         with:
           command: test
 
-      - name: Run cargo-tarpaulin
-        uses: actions-rs/tarpaulin@v0.1
-        with:
-          version: '0.15.0'
-          args: '-- --test-threads 1'
-
-      - name: Archive code coverage results
-        uses: actions/upload-artifact@v4
-        with:
-          name: code-coverage-report-${{ matrix.runs-on }}
-          path: cobertura.xml
-
-      # - name: Download All Artifacts
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     path: cobertura.xml
-      #     pattern: code-coverage-report-*
-      #     merge-multiple: true
-
   fmt:
     runs-on: ubuntu-latest
     steps:
