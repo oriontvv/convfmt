@@ -55,7 +55,7 @@ coverage:
 	export RUSTFLAGS="-Cinstrument-coverage"
 	cargo build
 	LLVM_PROFILE_FILE='target/coverage/%p-%m.profraw' RUSTFLAGS='-C instrument-coverage' cargo test
-	grcov . -s . --binary-path ./target/debug -t html --branch --ignore-not-existing -o ./htmlcov/
+	grcov . -s . --binary-path ./target/debug --ignore src/main.rs -t html --branch --ignore-not-existing -o ./htmlcov/
 	# open ./htmlcov/index.html
 
 fmt:
