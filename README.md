@@ -22,9 +22,11 @@ By default `convfmt` uses `pretty` format(can be disabled with `--compact` optio
 Beware of `null`s, some formats don't support them (e.g. toml).
 
 ## Installation:
-```
-cargo install convfmt
-```
+* Get built [binary](https://github.com/oriontvv/convfmt/releases)
+* Install using cargo-binstall:
+    * install [cargo-binstall](https://github.com/cargo-bins/cargo-binstall?tab=readme-ov-file#installation)
+    * `cargo binstall convfmt`
+* Build from sources: `cargo install convfmt`
 
 ## Many thanks to:
 This tool stands on the shoulders of such giants:
