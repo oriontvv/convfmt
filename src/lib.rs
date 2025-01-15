@@ -1,5 +1,6 @@
 use anyhow::Result;
 use serde::Serialize;
+use serde_xml_rs::{from_str, to_string};
 
 #[derive(Debug, Copy, Clone, PartialEq, clap::ValueEnum)]
 pub enum Format {
@@ -9,6 +10,7 @@ pub enum Format {
     Ron,
     Json5,
     Bson,
+    Xml,
 }
 
 #[derive(Debug, Serialize)]
@@ -20,6 +22,7 @@ pub enum Value {
     Ron(ron::Value),
     Json5(serde_json::Value),
     Bson(bson::Bson),
+    Xml(serde_xml_rs::ParserConfig),
 }
 
 pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
@@ -33,6 +36,7 @@ pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
         Format::Ron => Value::Ron(ron::de::from_bytes(input)?),
         Format::Json5 => Value::Json5(serde_json::from_slice(input)?),
         Format::Bson => Value::Bson(bson::from_slice(input)?),
+        Format::Xml => Value::Xml(from_str()),
     };
     Ok(value)
 }
