@@ -22,8 +22,14 @@ By default `convfmt` uses `pretty` format(can be disabled with `--compact` optio
 Beware of `null`s, some formats don't support them (e.g. toml).
 
 ## Installation:
+* binary
+```bash
+cargo install cargo-binstall && cargo binstall ryaspeller
 ```
-cargo install convfmt
+
+* from sources
+```bash
+cargo install ryaspeller
 ```
 
 ## Many thanks to:

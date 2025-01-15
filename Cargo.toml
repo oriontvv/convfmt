@@ -27,3 +27,11 @@ toml = "0.8.19"
 [dev-dependencies]
 rstest = "0.24.0"
  
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/{ version }/{ name }-linux-musl{ archive-suffix }"
+
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-url = "{ repo }/releases/download/{ version }/{ name }-win{ archive-suffix }"
+
+[package.metadata.binstall.overrides.x86_64-apple-darwin]
+pkg-url = "{ repo }/releases/download/{ version }/{ name }-mac{ archive-suffix }"
