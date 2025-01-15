@@ -1,9 +1,13 @@
 mod hocon_value;
+mod xml_value;
 
 use anyhow::Result;
 use serde::Serialize;
 
-use crate::hocon_value::{load_hocon, HoconWrapper};
+use crate::{
+    hocon_value::{load_hocon, HoconWrapper},
+    xml_value::{load_xml, XmlWrapper},
+};
 
 #[derive(Debug, Copy, Clone, PartialEq, clap::ValueEnum)]
 pub enum Format {
@@ -14,6 +18,7 @@ pub enum Format {
     Json5,
     Bson,
     Hocon,
+    Xml,
 }
 
 #[derive(Debug, Serialize)]
@@ -26,6 +31,7 @@ pub enum Value {
     Json5(serde_json::Value),
     Bson(bson::Bson),
     Hocon(HoconWrapper),
+    Xml(XmlWrapper),
 }
 
 pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
@@ -40,6 +46,7 @@ pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
         Format::Json5 => Value::Json5(serde_json::from_slice(input)?),
         Format::Bson => Value::Bson(bson::from_slice(input)?),
         Format::Hocon => Value::Hocon(load_hocon(input)?),
+        Format::Xml => Value::Xml(load_xml(input)?),
     };
     Ok(value)
 }
@@ -59,9 +66,8 @@ pub fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec
         .map(|e| e.into_bytes())?,
         (Format::Json5, _) => json5::to_string(value).map(|e| e.into_bytes())?,
         (Format::Bson, _) => bson::to_vec(value)?,
-        (Format::Hocon, _) => {
-            unimplemented!("Sorry, hocon output format is not implemented yet");
-        }
+        (Format::Hocon, _) => unimplemented!("Sorry, hocon output format is not implemented yet"),
+        (Format::Xml, _) => serde_xml_rs::to_string(value).map(|e| e.into_bytes())?,
     };
     Ok(dumped)
 }
@@ -130,6 +136,15 @@ boolean: false
 the_answer: 42
 "#
                     .to_string(),
+            (Format::Xml, _) => {
+                        r#"
+<?xml version="1.0" encoding="UTF-8" ?>
+<array>a</array>
+<array>b</array>
+<boolean>false</boolean>
+<the_answer>42</the_answer>
+                        "#.to_string()
+                    }
         }
     }
 
@@ -152,6 +167,8 @@ the_answer: 42
     #[case(Format::Json, Format::Bson, false)]
     #[case(Format::Bson, Format::Json5, true)]
     #[case(Format::Hocon, Format::Json, false)]
+    #[case(Format::Xml, Format::Yaml, false)]
+    #[case(Format::Toml, Format::Xml, true)]
     fn test_convert_formats(
         #[case] from_format: Format,
         #[case] to_format: Format,
