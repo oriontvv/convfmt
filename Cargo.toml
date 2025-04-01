@@ -25,7 +25,7 @@ serde_yaml = "0.9.34"
 toml = "0.8.20"
 
 [dev-dependencies]
-rstest = "0.24.0"
+rstest = "0.25.0"
  
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/{ version }/{ name }-linux-musl{ archive-suffix }"
