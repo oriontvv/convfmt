@@ -13,7 +13,7 @@
 ## Usage:
 
 ```bash
-$ cat cfg.toml | convfmt -f toml -t yaml > cfg.yml
+$ cat cfg.yml | convfmt -f yaml -t toml > cfg.toml
 $ convfmt -f json -t json < compact.json > pretty.json
 $ curl https://api.github.com/users/oriontvv | convfmt -f json -t json5 > api.json5
 ```
@@ -22,7 +22,13 @@ By default `convfmt` uses `pretty` format(can be disabled with `--compact` optio
 Beware of `null`s, some formats don't support them (e.g. toml).
 
 ## Installation:
+* binary
+```bash
+cargo install cargo-binstall && cargo binstall convfmt
 ```
+
+* from sources
+```bash
 cargo install convfmt
 ```
 
