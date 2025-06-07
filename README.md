@@ -1,5 +1,5 @@
 # convfmt
-[![Actions Status](https://github.com/oriontvv/convfmt/workflows/CI/badge.svg)](https://github.com/oriontvv/convfmt/actions) [![Coverage badge](https://raw.githubusercontent.com/oriontvv/convfmt/coverage/htmlcov/badges/flat.svg)](https://htmlpreview.github.io/?https://github.com/oriontvv/convfmt/coverage/htmlcov/index.html) [![dependency status](https://deps.rs/repo/github/oriontvv/convfmt/status.svg)](https://deps.rs/repo/github/oriontvv/convfmt) [![Crates.io](https://img.shields.io/crates/v/convfmt.svg)](https://crates.io/crates/convfmt)
+[![Actions Status](https://github.com/oriontvv/convfmt/workflows/CI/badge.svg?branch=master)](https://github.com/oriontvv/convfmt/actions) [![Coverage badge](https://raw.githubusercontent.com/oriontvv/convfmt/coverage/htmlcov/badges/flat.svg)](https://htmlpreview.github.io/?https://github.com/oriontvv/convfmt/coverage/htmlcov/index.html) [![dependency status](https://deps.rs/repo/github/oriontvv/convfmt/status.svg)](https://deps.rs/repo/github/oriontvv/convfmt) [![Crates.io](https://img.shields.io/crates/v/convfmt.svg)](https://crates.io/crates/convfmt)
 
 
 [convfmt](https://github.com/oriontvv/convfmt) is a command line tool which can convert between formats:
@@ -9,6 +9,7 @@
 * [ron](https://github.com/ron-rs/ron)
 * [json5](https://en.wikipedia.org/wiki/JSON5)
 * [bson](https://en.wikipedia.org/wiki/BSON)
+* [hocon](https://github.com/lightbend/config/blob/main/HOCON.md) (from only)
 
 ## Usage:
 
@@ -22,12 +23,14 @@ By default `convfmt` uses `pretty` format(can be disabled with `--compact` optio
 Beware of `null`s, some formats don't support them (e.g. toml).
 
 ## Installation:
-* binary
+* Download built [binary](https://github.com/oriontvv/convfmt/releases)
+
+* Install binary using [cargo-binstall](https://github.com/cargo-bins/cargo-binstall)
 ```bash
 cargo install cargo-binstall && cargo binstall convfmt
 ```
 
-* from sources
+* Build from sources with [rust](https://www.rust-lang.org/tools/install)
 ```bash
 cargo install convfmt
 ```
@@ -41,3 +44,4 @@ This tool stands on the shoulders of such giants:
 * [ron](https://crates.io/crates/ron)
 * [json5](https://crates.io/crates/json5)
 * [bson](https://crates.io/crates/bson)
+* [hocon](https://crates.io/crates/hocon)

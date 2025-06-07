@@ -1,5 +1,9 @@
+mod hocon_value;
+
 use anyhow::Result;
 use serde::Serialize;
+
+use crate::hocon_value::{load_hocon, HoconWrapper};
 
 #[derive(Debug, Copy, Clone, PartialEq, clap::ValueEnum)]
 pub enum Format {
@@ -9,6 +13,7 @@ pub enum Format {
     Ron,
     Json5,
     Bson,
+    Hocon,
 }
 
 #[derive(Debug, Serialize)]
@@ -20,6 +25,7 @@ pub enum Value {
     Ron(ron::Value),
     Json5(serde_json::Value),
     Bson(bson::Bson),
+    Hocon(HoconWrapper),
 }
 
 pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
@@ -33,6 +39,7 @@ pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
         Format::Ron => Value::Ron(ron::de::from_bytes(input)?),
         Format::Json5 => Value::Json5(serde_json::from_slice(input)?),
         Format::Bson => Value::Bson(bson::from_slice(input)?),
+        Format::Hocon => Value::Hocon(load_hocon(input)?),
     };
     Ok(value)
 }
@@ -52,6 +59,9 @@ pub fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec
         .map(|e| e.into_bytes())?,
         (Format::Json5, _) => json5::to_string(value).map(|e| e.into_bytes())?,
         (Format::Bson, _) => bson::to_vec(value)?,
+        (Format::Hocon, _) => {
+            unimplemented!("Sorry, hocon output format is not implemented yet");
+        }
     };
     Ok(dumped)
 }
@@ -65,8 +75,8 @@ mod tests {
     fn get_test_value(format: Format, is_compact: bool) -> String {
         match (format, is_compact) {
             (Format::Json, true) => {
-                r#"{"array":["a","b"],"boolean":false,"the_answer":42}"#.to_string()
-            }
+                        r#"{"array":["a","b"],"boolean":false,"the_answer":42}"#.to_string()
+                    }
             (Format::Json, false) => r#"{
   "array": [
     "a",
@@ -75,19 +85,19 @@ mod tests {
   "boolean": false,
   "the_answer": 42
 }"#
-            .to_string(),
+                    .to_string(),
             (Format::Yaml, _) => r#"array:
 - a
 - b
 boolean: false
 the_answer: 42
 "#
-            .to_string(),
+                    .to_string(),
             (Format::Toml, true) => r#"array = ["a", "b"]
 boolean = false
 the_answer = 42
 "#
-            .to_string(),
+                    .to_string(),
             (Format::Toml, false) => r#"array = [
     "a",
     "b",
@@ -95,10 +105,10 @@ the_answer = 42
 boolean = false
 the_answer = 42
 "#
-            .to_string(),
+                    .to_string(),
             (Format::Ron, true) => {
-                r#"{"array":["a","b"],"boolean":false,"the_answer":42}"#.to_string()
-            }
+                        r#"{"array":["a","b"],"boolean":false,"the_answer":42}"#.to_string()
+                    }
             (Format::Ron, false) => r#"{
     "array": [
         "a",
@@ -107,13 +117,19 @@ the_answer = 42
     "boolean": false,
     "the_answer": 42,
 }"#
-            .to_string(),
+                    .to_string(),
             (Format::Json5, _) => {
-                r#"{"array":["a","b"],"boolean":false,"the_answer":42}"#.to_string()
-            }
+                        r#"{"array":["a","b"],"boolean":false,"the_answer":42}"#.to_string()
+                    }
             (Format::Bson, _) => {
-                "A\0\0\0\u{4}array\0\u{17}\0\0\0\u{2}0\0\u{2}\0\0\0a\0\u{2}1\0\u{2}\0\0\0b\0\0\u{8}boolean\0\0\u{12}the_answer\0*\0\0\0\0\0\0\0\0".to_string()
-            }
+                        "A\0\0\0\u{4}array\0\u{17}\0\0\0\u{2}0\0\u{2}\0\0\0a\0\u{2}1\0\u{2}\0\0\0b\0\0\u{8}boolean\0\0\u{12}the_answer\0*\0\0\0\0\0\0\0\0".to_string()
+                    }
+            (Format::Hocon, _) => r#"
+array: [a,b]
+boolean: false
+the_answer: 42
+"#
+                    .to_string(),
         }
     }
 
@@ -135,6 +151,7 @@ the_answer = 42
     #[case(Format::Json5, Format::Json, false)]
     #[case(Format::Json, Format::Bson, false)]
     #[case(Format::Bson, Format::Json5, true)]
+    #[case(Format::Hocon, Format::Json, false)]
     fn test_convert_formats(
         #[case] from_format: Format,
         #[case] to_format: Format,
