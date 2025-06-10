@@ -67,7 +67,7 @@ pub fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec
         (Format::Json5, _) => json5::to_string(value).map(|e| e.into_bytes())?,
         (Format::Bson, _) => bson::to_vec(value)?,
         (Format::Hocon, _) => unimplemented!("Sorry, hocon output format is not implemented yet"),
-        (Format::Xml, _) => serde_xml_rs::to_string(value).map(|e| e.into_bytes())?,
+        (Format::Xml, _) => todo!(),
     };
     Ok(dumped)
 }
