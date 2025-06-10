@@ -50,7 +50,7 @@ pub fn load_xml(xml_str: &[u8]) -> Result<XmlWrapper> {
             }
             Ok(Event::End(_)) => {
                 let value = if current_map.is_empty() {
-                    parse_value(&buffer.trim())
+                    parse_value(buffer.trim())
                 } else {
                     if !buffer.trim().is_empty() {
                         current_map.insert(
@@ -136,8 +136,7 @@ fn dump_xml(value: &JsonValue, xml: &mut String, name: Option<&str>) -> Result<(
             let mut text_content = None;
 
             for (key, val) in obj {
-                if key.starts_with('@') {
-                    let attr_name = &key[1..];
+                if let Some(attr_name) = key.strip_prefix('@') {
                     if let JsonValue::String(attr_val) = val {
                         xml.push_str(&format!(" {}=\"{}\"", attr_name, escape_xml(attr_val)));
                     }
