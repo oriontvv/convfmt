@@ -6,7 +6,7 @@ use serde::Serialize;
 
 use crate::{
     hocon_value::{load_hocon, HoconWrapper},
-    xml_value::{load_xml, XmlWrapper},
+    xml_value::{json_to_xml, load_xml, XmlWrapper},
 };
 
 #[derive(Debug, Copy, Clone, PartialEq, clap::ValueEnum)]
@@ -67,7 +67,10 @@ pub fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec
         (Format::Json5, _) => json5::to_string(value).map(|e| e.into_bytes())?,
         (Format::Bson, _) => bson::to_vec(value)?,
         (Format::Hocon, _) => unimplemented!("Sorry, hocon output format is not implemented yet"),
-        (Format::Xml, _) => todo!(),
+        (Format::Xml, _) => {
+            let json_dumped = serde_json::to_vec(value)?;
+            json_to_xml(&json_dumped)?
+        }
     };
     Ok(dumped)
 }
@@ -137,13 +140,7 @@ the_answer: 42
 "#
                     .to_string(),
             (Format::Xml, _) => {
-                        r#"
-<?xml version="1.0" encoding="UTF-8" ?>
-<array>a</array>
-<array>b</array>
-<boolean>false</boolean>
-<the_answer>42</the_answer>
-                        "#.to_string()
+                        r#"<root><array>a</array><array>b</array><boolean>false</boolean><the_answer>42</the_answer></root>"#.to_string()
                     }
         }
     }

@@ -3,7 +3,6 @@ use quick_xml::events::Event;
 use quick_xml::Reader;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value as JsonValue};
-use std::collections::HashMap;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct XmlWrapper(serde_json::Value);
@@ -90,18 +89,15 @@ pub fn load_xml(xml_str: &[u8]) -> Result<XmlWrapper> {
     }
 
     if stack.is_empty() && !current_map.is_empty() {
-        Ok(XmlWrapper(JsonValue::Object(current_map)))
+        // unpack root item
+        if let Some(root) = current_map.get("root") {
+            Ok(XmlWrapper(root.clone()))
+        } else {
+            Ok(XmlWrapper(JsonValue::Object(current_map)))
+        }
     } else {
         bail!("Can't read xml");
     }
-}
-
-fn escape_xml(s: &str) -> String {
-    s.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-        .replace('\'', "&apos;")
 }
 
 fn parse_value(s: &str) -> JsonValue {
@@ -120,4 +116,104 @@ fn parse_value(s: &str) -> JsonValue {
         }
     }
     JsonValue::String(s.to_string())
+}
+
+pub fn json_to_xml(json: &[u8]) -> Result<Vec<u8>> {
+    let xml: JsonValue = serde_json::from_slice(json)?;
+    let mut buffer = String::new();
+    dump_xml(&xml, &mut buffer, None)?;
+    Ok(buffer.into_bytes())
+}
+
+fn dump_xml(value: &JsonValue, xml: &mut String, name: Option<&str>) -> Result<()> {
+    match value {
+        JsonValue::Object(obj) => {
+            let tag_name = name.unwrap_or("root");
+            xml.push_str(&format!("<{}", tag_name));
+
+            // Handle attributes
+            let mut has_children = false;
+            let mut text_content = None;
+
+            for (key, val) in obj {
+                if key.starts_with('@') {
+                    let attr_name = &key[1..];
+                    if let JsonValue::String(attr_val) = val {
+                        xml.push_str(&format!(" {}=\"{}\"", attr_name, escape_xml(attr_val)));
+                    }
+                } else if key == "#text" {
+                    if let JsonValue::String(text) = val {
+                        text_content = Some(text);
+                    }
+                }
+            }
+
+            xml.push('>');
+
+            // Handle child elements and text content
+            for (key, val) in obj {
+                if !key.starts_with('@') && key != "#text" {
+                    has_children = true;
+                    if let JsonValue::Array(arr) = val {
+                        for item in arr {
+                            dump_xml(item, xml, Some(key))?;
+                        }
+                    } else {
+                        dump_xml(val, xml, Some(key))?;
+                    }
+                }
+            }
+
+            if let Some(text) = text_content {
+                xml.push_str(&escape_xml(text));
+            } else if !has_children && text_content.is_none() {
+                // Self-closing tag if no content
+                xml.pop(); // Remove '>'
+                xml.push_str("/>");
+                return Ok(());
+            }
+
+            xml.push_str(&format!("</{}>", tag_name));
+        }
+        JsonValue::Array(arr) => {
+            for item in arr {
+                dump_xml(item, xml, name)?;
+            }
+        }
+        JsonValue::String(s) => {
+            if let Some(tag_name) = name {
+                xml.push_str(&format!("<{}>{}</{}>", tag_name, escape_xml(s), tag_name));
+            } else {
+                xml.push_str(&escape_xml(s));
+            }
+        }
+        JsonValue::Number(n) => {
+            if let Some(tag_name) = name {
+                xml.push_str(&format!("<{}>{}</{}>", tag_name, n, tag_name));
+            } else {
+                xml.push_str(&n.to_string());
+            }
+        }
+        JsonValue::Bool(b) => {
+            if let Some(tag_name) = name {
+                xml.push_str(&format!("<{}>{}</{}>", tag_name, b, tag_name));
+            } else {
+                xml.push_str(&b.to_string());
+            }
+        }
+        JsonValue::Null => {
+            if let Some(tag_name) = name {
+                xml.push_str(&format!("<{}/>", tag_name));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn escape_xml(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&apos;")
 }
