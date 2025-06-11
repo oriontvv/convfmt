@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9] - 2025-06-11
+### Added
+- `xml` format #106
+
 ## [0.1.8] - 2025-06-07
 ### Added
 - `hocon` format (as input format only) #130
