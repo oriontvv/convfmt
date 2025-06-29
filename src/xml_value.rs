@@ -28,7 +28,7 @@ pub fn load_xml(xml_str: &[u8]) -> Result<XmlWrapper> {
                     let key = String::from_utf8_lossy(&key).into_owned();
                     let value = attr.value.as_ref().to_vec();
                     let value = String::from_utf8_lossy(&value).into_owned();
-                    attributes.insert(format!("@{}", key), parse_value(&value));
+                    attributes.insert(format!("@{key}"), parse_value(&value));
                 }
 
                 if !attributes.is_empty() {
@@ -40,7 +40,7 @@ pub fn load_xml(xml_str: &[u8]) -> Result<XmlWrapper> {
                 current_name = name;
             }
             Ok(Event::Text(e)) => {
-                let text = e.decode().context(format!("XML unescape error: {:?}", e))?;
+                let text = e.decode().context(format!("XML unescape error: {e:?}"))?;
                 buffer = text.into_owned();
             }
             Ok(Event::CData(e)) => {
@@ -127,7 +127,7 @@ fn dump_xml(value: &JsonValue, xml: &mut String, name: Option<&str>) -> Result<(
     match value {
         JsonValue::Object(obj) => {
             let tag_name = name.unwrap_or("root");
-            xml.push_str(&format!("<{}", tag_name));
+            xml.push_str(&format!("<{tag_name}"));
 
             // Handle attributes
             let mut has_children = false;
@@ -170,7 +170,7 @@ fn dump_xml(value: &JsonValue, xml: &mut String, name: Option<&str>) -> Result<(
                 return Ok(());
             }
 
-            xml.push_str(&format!("</{}>", tag_name));
+            xml.push_str(&format!("</{tag_name}>"));
         }
         JsonValue::Array(arr) => {
             for item in arr {
@@ -186,21 +186,21 @@ fn dump_xml(value: &JsonValue, xml: &mut String, name: Option<&str>) -> Result<(
         }
         JsonValue::Number(n) => {
             if let Some(tag_name) = name {
-                xml.push_str(&format!("<{}>{}</{}>", tag_name, n, tag_name));
+                xml.push_str(&format!("<{tag_name}>{n}</{tag_name}>"));
             } else {
                 xml.push_str(&n.to_string());
             }
         }
         JsonValue::Bool(b) => {
             if let Some(tag_name) = name {
-                xml.push_str(&format!("<{}>{}</{}>", tag_name, b, tag_name));
+                xml.push_str(&format!("<{tag_name}>{b}</{tag_name}>"));
             } else {
                 xml.push_str(&b.to_string());
             }
         }
         JsonValue::Null => {
             if let Some(tag_name) = name {
-                xml.push_str(&format!("<{}/>", tag_name));
+                xml.push_str(&format!("<{tag_name}/>"));
             }
         }
     }
