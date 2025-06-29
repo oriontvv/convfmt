@@ -5,8 +5,8 @@ use anyhow::Result;
 use serde::Serialize;
 
 use crate::{
-    hocon_value::{load_hocon, HoconWrapper},
-    xml_value::{json_to_xml, load_xml, XmlWrapper},
+    hocon_value::{HoconWrapper, load_hocon},
+    xml_value::{XmlWrapper, json_to_xml, load_xml},
 };
 
 #[derive(Debug, Copy, Clone, PartialEq, clap::ValueEnum)]

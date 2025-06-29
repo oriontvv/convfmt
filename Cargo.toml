@@ -1,7 +1,7 @@
 [package]
 name = "convfmt"
-version = "0.1.9"
-edition = "2021"
+version = "1.0.0"
+edition = "2024"
 license = "Apache-2.0"
 authors = ["oriontvv <taranov.vv@gmail.com>"]
 description = "cli tool which can convert different formats"

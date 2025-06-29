@@ -1,6 +1,6 @@
-use anyhow::{bail, Context, Result};
-use quick_xml::events::Event;
+use anyhow::{Context, Result, bail};
 use quick_xml::Reader;
+use quick_xml::events::Event;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value as JsonValue};
 
@@ -63,7 +63,7 @@ pub fn load_xml(xml_str: &[u8]) -> Result<XmlWrapper> {
 
                 if parent_map.contains_key(&current_name) {
                     let existing_value = parent_map.get_mut(&current_name).unwrap();
-                    if let JsonValue::Array(ref mut arr) = existing_value {
+                    if let JsonValue::Array(arr) = existing_value {
                         arr.push(value);
                     } else {
                         let old_value = parent_map.remove(&current_name).unwrap();

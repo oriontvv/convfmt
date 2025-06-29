@@ -3,7 +3,7 @@ use std::io::{self, Read, Write};
 use anyhow::Result;
 use clap::Parser;
 
-use convfmt::{dump_value, load_input, Format};
+use convfmt::{Format, dump_value, load_input};
 
 #[derive(Parser, Debug)]
 #[command(about, version, author)]
