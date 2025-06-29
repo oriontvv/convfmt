@@ -40,9 +40,7 @@ pub fn load_xml(xml_str: &[u8]) -> Result<XmlWrapper> {
                 current_name = name;
             }
             Ok(Event::Text(e)) => {
-                let text = e
-                    .unescape()
-                    .context(format!("XML unescape error: {:?}", e))?;
+                let text = e.decode().context(format!("XML unescape error: {:?}", e))?;
                 buffer = text.into_owned();
             }
             Ok(Event::CData(e)) => {

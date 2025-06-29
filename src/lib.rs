@@ -19,6 +19,7 @@ pub enum Format {
     Bson,
     Hocon,
     Xml,
+    Hjson,
 }
 
 #[derive(Debug, Serialize)]
@@ -32,6 +33,7 @@ pub enum Value {
     Bson(bson::Bson),
     Hocon(HoconWrapper),
     Xml(XmlWrapper),
+    Hjson(serde_hjson::Value),
 }
 
 pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
@@ -47,6 +49,7 @@ pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
         Format::Bson => Value::Bson(bson::from_slice(input)?),
         Format::Hocon => Value::Hocon(load_hocon(input)?),
         Format::Xml => Value::Xml(load_xml(input)?),
+        Format::Hjson => Value::Hjson(serde_hjson::from_slice(input)?),
     };
     Ok(value)
 }
@@ -71,6 +74,7 @@ pub fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec
             let json_dumped = serde_json::to_vec(value)?;
             json_to_xml(&json_dumped)?
         }
+        (Format::Hjson, _) => serde_hjson::to_vec(value)?,
     };
     Ok(dumped)
 }
@@ -138,10 +142,18 @@ array: [a,b]
 boolean: false
 the_answer: 42
 "#
+                            .to_string(),
+            (Format::Xml, _) => r#"<root><array>a</array><array>b</array><boolean>false</boolean><the_answer>42</the_answer></root>"#.to_string(),
+            (Format::Hjson, _) => r#"{
+  array:
+  [
+    a
+    b
+  ]
+  boolean: false
+  the_answer: 42
+}"#
                     .to_string(),
-            (Format::Xml, _) => {
-                        r#"<root><array>a</array><array>b</array><boolean>false</boolean><the_answer>42</the_answer></root>"#.to_string()
-                    }
         }
     }
 
@@ -166,6 +178,8 @@ the_answer: 42
     #[case(Format::Hocon, Format::Json, false)]
     #[case(Format::Xml, Format::Yaml, false)]
     #[case(Format::Toml, Format::Xml, true)]
+    #[case(Format::Toml, Format::Hjson, true)]
+    #[case(Format::Hjson, Format::Json, false)]
     fn test_convert_formats(
         #[case] from_format: Format,
         #[case] to_format: Format,
@@ -177,6 +191,10 @@ the_answer: 42
         let value = load_input(input.as_bytes(), from_format).unwrap();
         let output = String::from_utf8(dump_value(&value, to_format, is_compact).unwrap()).unwrap();
 
-        assert_eq!(output, expected_output);
+        assert_eq!(
+            output, expected_output,
+            "{:?} -> {:?}",
+            from_format, to_format
+        );
     }
 }
