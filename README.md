@@ -11,6 +11,7 @@
 * [bson](https://en.wikipedia.org/wiki/BSON)
 * [xml](https://en.wikipedia.org/wiki/XML)
 * [hocon](https://github.com/lightbend/config/blob/main/HOCON.md) (from only)
+* [hjson](https://hjson.github.io/)
 
 ## Usage:
 
@@ -47,3 +48,4 @@ This tool stands on the shoulders of such giants:
 * [bson](https://crates.io/crates/bson)
 * [xml](https://crates.io/crates/quick-xml)
 * [hocon](https://crates.io/crates/hocon)
+* [hjson](https://crates.io/crates/hjson)
