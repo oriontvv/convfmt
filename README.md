@@ -12,6 +12,7 @@
 * [xml](https://en.wikipedia.org/wiki/XML)
 * [hocon](https://github.com/lightbend/config/blob/main/HOCON.md) (from only)
 * [hjson](https://hjson.github.io/)
+* [csv](https://en.wikipedia.org/wiki/Comma-separated_values)
 
 ## Usage:
 
@@ -49,3 +50,4 @@ This tool stands on the shoulders of such giants:
 * [xml](https://crates.io/crates/quick-xml)
 * [hocon](https://crates.io/crates/hocon)
 * [hjson](https://crates.io/crates/hjson)
+* [csv](https://crates.io/crates/csv)
