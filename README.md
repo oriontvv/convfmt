@@ -2,7 +2,7 @@
 [![Actions Status](https://github.com/oriontvv/convfmt/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/oriontvv/convfmt/actions/workflows/ci.yml) [![Coverage badge](https://raw.githubusercontent.com/oriontvv/convfmt/coverage/htmlcov/badges/flat.svg)](https://htmlpreview.github.io/?https://github.com/oriontvv/convfmt/coverage/htmlcov/index.html) [![dependency status](https://deps.rs/repo/github/oriontvv/convfmt/status.svg)](https://deps.rs/repo/github/oriontvv/convfmt) [![Crates.io](https://img.shields.io/crates/v/convfmt.svg)](https://crates.io/crates/convfmt)
 
 
-[convfmt](https://github.com/oriontvv/convfmt) is a command line tool which can convert between formats:
+[convfmt](https://github.com/oriontvv/convfmt) is a command line tool in rust which can convert between formats:
 * [json](https://en.wikipedia.org/wiki/JSON)
 * [yaml](https://en.wikipedia.org/wiki/YAML)
 * [toml](https://en.wikipedia.org/wiki/TOML)
@@ -23,6 +23,7 @@ $ curl https://api.github.com/users/oriontvv | convfmt -f json -t json5 > api.js
 ```
 
 By default `convfmt` uses `pretty` format(can be disabled with `--compact` option).
+
 Beware of `null`s, some formats don't support them (e.g. toml).
 
 ## Installation:
