@@ -78,6 +78,8 @@ jobs:
   sec:
     name: Security audit
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
     steps:
     - uses: actions/checkout@v4
     - uses: actions-rs/audit-check@v1
