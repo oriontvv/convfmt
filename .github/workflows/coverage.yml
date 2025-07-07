@@ -44,7 +44,7 @@ jobs:
         run: make coverage
 
       - name: Upload coverage results
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v6
         with:
           branch: coverage
           create_branch: true
