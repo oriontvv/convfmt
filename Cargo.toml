@@ -30,7 +30,7 @@ serde-hjson = "1.1.0"
 toml = "0.8.22"
 
 [dev-dependencies]
-rstest = "0.25.0"
+rstest = "0.26.1"
  
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/{ version }/{ name }-linux-musl{ archive-suffix }"
