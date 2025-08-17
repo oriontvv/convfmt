@@ -51,10 +51,10 @@ fn parse_value(s: &str) -> JsonValue {
     if let Ok(i) = s.parse::<i64>() {
         return JsonValue::Number(i.into());
     }
-    if let Ok(f) = s.parse::<f64>() {
-        if f.is_finite() {
-            return JsonValue::Number(serde_json::Number::from_f64(f).unwrap());
-        }
+    if let Ok(f) = s.parse::<f64>()
+        && f.is_finite()
+    {
+        return JsonValue::Number(serde_json::Number::from_f64(f).unwrap());
     }
     JsonValue::String(s.to_string())
 }

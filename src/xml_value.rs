@@ -106,10 +106,10 @@ fn parse_value(s: &str) -> JsonValue {
     if let Ok(i) = s.parse::<i64>() {
         return JsonValue::Number(i.into());
     }
-    if let Ok(f) = s.parse::<f64>() {
-        if f.is_finite() {
-            return JsonValue::Number(serde_json::Number::from_f64(f).unwrap());
-        }
+    if let Ok(f) = s.parse::<f64>()
+        && f.is_finite()
+    {
+        return JsonValue::Number(serde_json::Number::from_f64(f).unwrap());
     }
     JsonValue::String(s.to_string())
 }
@@ -136,10 +136,10 @@ fn dump_xml(value: &JsonValue, xml: &mut String, name: Option<&str>) -> Result<(
                     if let JsonValue::String(attr_val) = val {
                         xml.push_str(&format!(" {}=\"{}\"", attr_name, escape_xml(attr_val)));
                     }
-                } else if key == "#text" {
-                    if let JsonValue::String(text) = val {
-                        text_content = Some(text);
-                    }
+                } else if key == "#text"
+                    && let JsonValue::String(text) = val
+                {
+                    text_content = Some(text);
                 }
             }
 
