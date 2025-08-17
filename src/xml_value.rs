@@ -48,13 +48,11 @@ pub fn load_xml(xml_str: &[u8]) -> Result<XmlWrapper> {
             }
             Ok(Event::End(_)) => {
                 let value = if current_map.is_empty() {
-                    parse_value(buffer.trim())
+                    parse_value(&buffer)
                 } else {
                     if !buffer.trim().is_empty() {
-                        current_map.insert(
-                            "#text".to_string(),
-                            JsonValue::String(buffer.trim().to_string()),
-                        );
+                        current_map
+                            .insert("#text".to_string(), JsonValue::String(buffer.to_string()));
                     }
                     JsonValue::Object(current_map)
                 };
