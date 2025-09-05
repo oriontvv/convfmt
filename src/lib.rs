@@ -50,7 +50,7 @@ pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
         }
         Format::Ron => Value::Ron(ron::de::from_bytes(input)?),
         Format::Json5 => Value::Json5(serde_json::from_slice(input)?),
-        Format::Bson => Value::Bson(bson::from_slice(input)?),
+        Format::Bson => Value::Bson(bson::deserialize_from_slice(input)?),
         Format::Hocon => Value::Hocon(load_hocon(input)?),
         Format::Xml => Value::Xml(load_xml(input)?),
         Format::Hjson => Value::Hjson(serde_hjson::from_slice(input)?),
@@ -73,7 +73,7 @@ pub fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec
         )
         .map(|e| e.into_bytes())?,
         (Format::Json5, _) => json5::to_string(value).map(|e| e.into_bytes())?,
-        (Format::Bson, _) => bson::to_vec(value)?,
+        (Format::Bson, _) => bson::serialize_to_vec(value)?,
         (Format::Hocon, _) => unimplemented!("Sorry, hocon output format is not implemented yet"),
         (Format::Xml, _) => {
             let json_dumped = serde_json::to_vec(value)?;
@@ -208,22 +208,22 @@ the_answer: 42
     #[case(
         Format::Csv,
         Format::Json,
-        r#"name,age,power,immortal
-Gendalf, 55000, 50.0, true
-Frodo, 50, 5.0, false
+        r#"age,immortal,name,power
+55000,true,Gendalf,50.0
+50,false,Frodo,5.0
 "#,
         r#"[
   {
-    "name": "Gendalf",
     "age": 55000,
-    "power": 50.0,
-    "immortal": true
+    "immortal": true,
+    "name": "Gendalf",
+    "power": 50.0
   },
   {
-    "name": "Frodo",
     "age": 50,
-    "power": 5.0,
-    "immortal": false
+    "immortal": false,
+    "name": "Frodo",
+    "power": 5.0
   }
 ]"#,
         false
@@ -231,20 +231,20 @@ Frodo, 50, 5.0, false
     #[case(
         Format::Csv,
         Format::Json,
-        r#"name,age,power,immortal,test_empty
-Gendalf, 55000, 50.0, true,
-Frodo, 50, 5.0, false,
+        r#"age,immortal,name,power,test_empty
+55000, true, Gendalf, 50.0,
+50, false, Frodo, 5.0,
 "#,
-        r#"[{"name":"Gendalf","age":55000,"power":50.0,"immortal":true,"test_empty":null},{"name":"Frodo","age":50,"power":5.0,"immortal":false,"test_empty":null}]"#,
+        r#"[{"age":55000,"immortal":true,"name":"Gendalf","power":50.0,"test_empty":null},{"age":50,"immortal":false,"name":"Frodo","power":5.0,"test_empty":null}]"#,
         true
     )]
     #[case(
         Format::Json,
         Format::Csv,
-        r#"[{"name":"Gendalf the \"White\"","age":55000,"power":50.0,"immortal":true},{"name":"Frodo","age":50,"power":5.0,"immortal":false}]"#,
-        r#"name,age,power,immortal
-"Gendalf the \"White\"",55000,50.0,true
-"Frodo",50,5.0,false
+        r#"[{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0},{"age":50,"immortal":false,"name":"Frodo","power":5.0}]"#,
+        r#"age,immortal,name,power
+55000,true,"Gendalf the \"White\"",50.0
+50,false,"Frodo",5.0
 "#,
         true
     )]
