@@ -7,7 +7,7 @@ use serde::Serialize;
 
 use crate::{
     csv_value::{CsvWrapper, json_to_csv, load_csv},
-    hocon_value::{HoconWrapper, json_to_hocon, load_hocon},
+    hocon_value::{HoconWrapper, load_hocon},
     xml_value::{XmlWrapper, json_to_xml, load_xml},
 };
 
@@ -74,10 +74,8 @@ pub fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec
         .map(|e| e.into_bytes())?,
         (Format::Json5, _) => json5::to_string(value).map(|e| e.into_bytes())?,
         (Format::Bson, _) => bson::serialize_to_vec(value)?,
-        (Format::Hocon, _) => {
-            let json_dumped = serde_json::to_vec(value)?;
-            json_to_hocon(&json_dumped)?
-        }
+        (Format::Hocon, true) => serde_json::to_vec(value)?,
+        (Format::Hocon, false) => serde_json::to_vec_pretty(value)?,
         (Format::Xml, _) => {
             let json_dumped = serde_json::to_vec(value)?;
             json_to_xml(&json_dumped)?
@@ -249,6 +247,20 @@ the_answer: 42
 55000,true,"Gendalf the \"White\"",50.0
 50,false,"Frodo",5.0
 "#,
+        true
+    )]
+    #[case(
+        Format::Hocon,
+        Format::Json,
+        r#"{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0}"#,
+        r#"{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0}"#,
+        true
+    )]
+    #[case(
+        Format::Json,
+        Format::Json,
+        r#"[{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0},{"age":50,"immortal":false,"name":"Frodo","power":5.0}]"#,
+        r#"[{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0},{"age":50,"immortal":false,"name":"Frodo","power":5.0}]"#,
         true
     )]
     fn test_raw_convert(

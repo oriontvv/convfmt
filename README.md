@@ -10,7 +10,7 @@
 * [json5](https://en.wikipedia.org/wiki/JSON5)
 * [bson](https://en.wikipedia.org/wiki/BSON)
 * [xml](https://en.wikipedia.org/wiki/XML)
-* [hocon](https://github.com/lightbend/config/blob/main/HOCON.md) (from only)
+* [hocon](https://github.com/lightbend/config/blob/main/HOCON.md)
 * [hjson](https://hjson.github.io/)
 * [csv](https://en.wikipedia.org/wiki/Comma-separated_values)
 
