@@ -281,6 +281,7 @@ dependencies = [
  "hjson",
  "hocon",
  "json5",
+ "linked-hash-map",
  "quick-xml",
  "ron",
  "rstest",

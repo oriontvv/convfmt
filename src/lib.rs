@@ -7,7 +7,7 @@ use serde::Serialize;
 
 use crate::{
     csv_value::{CsvWrapper, json_to_csv, load_csv},
-    hocon_value::{HoconWrapper, load_hocon},
+    hocon_value::{HoconWrapper, json_to_hocon, load_hocon},
     xml_value::{XmlWrapper, json_to_xml, load_xml},
 };
 
@@ -74,7 +74,10 @@ pub fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec
         .map(|e| e.into_bytes())?,
         (Format::Json5, _) => json5::to_string(value).map(|e| e.into_bytes())?,
         (Format::Bson, _) => bson::serialize_to_vec(value)?,
-        (Format::Hocon, _) => unimplemented!("Sorry, hocon output format is not implemented yet"),
+        (Format::Hocon, _) => {
+            let json_dumped = serde_json::to_vec(value)?;
+            json_to_hocon(&json_dumped)?
+        }
         (Format::Xml, _) => {
             let json_dumped = serde_json::to_vec(value)?;
             json_to_xml(&json_dumped)?
