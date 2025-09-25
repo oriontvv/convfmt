@@ -13,6 +13,7 @@
 * [hocon](https://github.com/lightbend/config/blob/main/HOCON.md)
 * [hjson](https://hjson.github.io/)
 * [csv](https://en.wikipedia.org/wiki/Comma-separated_values)
+* [jsonl](https://jsonltools.com/what-is-jsonl)
 
 ## Usage:
 

@@ -1,5 +1,6 @@
 mod csv_value;
 mod hocon_value;
+mod jsonl_value;
 mod xml_value;
 
 use anyhow::Result;
@@ -8,6 +9,7 @@ use serde::Serialize;
 use crate::{
     csv_value::{CsvWrapper, json_to_csv, load_csv},
     hocon_value::{HoconWrapper, load_hocon},
+    jsonl_value::{JsonlWrapper, json_to_jsonl, load_jsonl},
     xml_value::{XmlWrapper, json_to_xml, load_xml},
 };
 
@@ -23,6 +25,7 @@ pub enum Format {
     Xml,
     Hjson,
     Csv,
+    Jsonl,
 }
 
 #[derive(Debug, Serialize)]
@@ -38,6 +41,7 @@ pub enum Value {
     Xml(XmlWrapper),
     Hjson(serde_hjson::Value),
     Csv(CsvWrapper),
+    Jsonl(JsonlWrapper),
 }
 
 pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
@@ -55,6 +59,7 @@ pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
         Format::Xml => Value::Xml(load_xml(input)?),
         Format::Hjson => Value::Hjson(serde_hjson::from_slice(input)?),
         Format::Csv => Value::Csv(load_csv(input)?),
+        Format::Jsonl => Value::Jsonl(load_jsonl(input)?),
     };
     Ok(value)
 }
@@ -84,6 +89,10 @@ pub fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec
         (Format::Csv, _) => {
             let json_dumped = serde_json::to_vec(value)?;
             json_to_csv(&json_dumped)?
+        }
+        (Format::Jsonl, _) => {
+            let json_dumped = serde_json::to_vec(value)?;
+            json_to_jsonl(&json_dumped)?
         }
     };
     Ok(dumped)
@@ -165,6 +174,7 @@ the_answer: 42
 }"#
                             .to_string(),
             (Format::Csv, _) => unimplemented!("use raw data for tests"),
+            (Format::Jsonl, _) => unimplemented!("use raw data for tests"),
         }
     }
 
@@ -263,6 +273,26 @@ the_answer: 42
         r#"[{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0},{"age":50,"immortal":false,"name":"Frodo","power":5.0}]"#,
         true
     )]
+    #[case(
+        Format::Jsonl,
+        Format::Xml,
+        r#"{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0}
+{"age":50,"immortal":false,"name":"Frodo","power":5.0}
+"#,
+    r#"<root><age>55000</age><immortal>true</immortal><name>Gendalf the &quot;White&quot;</name><power>50.0</power></root>
+<root><age>50</age><immortal>false</immortal><name>Frodo</name><power>5.0</power></root>
+"#,
+        false
+    )]
+    #[case(
+    Format::Json,
+    Format::Jsonl,
+    r#"[{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0},{"age":50,"immortal":false,"name":"Frodo","power":5.0}]"#,
+    r#"{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0}
+{"age":50,"immortal":false,"name":"Frodo","power":5.0}
+"#,
+    false
+)]
     fn test_raw_convert(
         #[case] from_format: Format,
         #[case] to_format: Format,
