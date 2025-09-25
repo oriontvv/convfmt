@@ -6,8 +6,7 @@ use serde_json::Value as JsonValue;
 
 #[derive(Debug, Deserialize)]
 pub struct CsvWrapper {
-    pub header: Vec<String>,
-    pub items: serde_json::Value, // array
+    pub items: serde_json::Value,
 }
 
 impl Serialize for CsvWrapper {
@@ -36,7 +35,6 @@ pub fn load_csv(csv_bytes: &[u8]) -> Result<CsvWrapper> {
     }
 
     Ok(CsvWrapper {
-        header,
         items: serde_json::Value::Array(items),
     })
 }

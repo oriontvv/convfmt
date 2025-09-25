@@ -5,20 +5,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.2.1] - 2025-09-26
 ### Added
-- dump hocon as json
+- jsonl format [#150](https://github.com/oriontvv/convfmt/pull/150)
+- dump hocon as json [#148](https://github.com/oriontvv/convfmt/pull/148)
+
 
 ## [1.1.1] - 2025-08-17
 ### Fixed
-- xml trim #139
+- xml trim [#139](https://github.com/oriontvv/convfmt/pull/139)
 
 ## [1.1.0] - 2025-06-30
 ### Added
-- `csv` format #133
+- `csv` format [#133](https://github.com/oriontvv/convfmt/pull/133)
 
 ## [1.0.0] - 2025-06-29
 ### Added
-- `hjson` format #132
+- `hjson` format [#132](https://github.com/oriontvv/convfmt/pull/132)
 - upgrade to 2024 edition
 
 ## [0.1.9] - 2025-06-11
@@ -47,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Using keep changelog format
 - Building windows-installer in release job
 ### Fixed
-- Fix indentation for ron on windows [24](https://github.com/oriontvv/convfmt/pull/24)
+- Fix indentation for ron on windows [#24](https://github.com/oriontvv/convfmt/pull/24)
 ### Removed
 - `cbor` format
 - homebrew packaging
