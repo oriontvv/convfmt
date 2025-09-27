@@ -1,6 +1,5 @@
 use anyhow::Result;
 use hocon::{Hocon, HoconLoader};
-use linked_hash_map::LinkedHashMap;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -36,42 +35,5 @@ fn hocon_to_json(hocon: Hocon) -> Result<serde_json::Value> {
         }
         Hocon::Null => Ok(serde_json::Value::Null),
         Hocon::BadValue(bad_value) => Err(anyhow::Error::from(bad_value)),
-    }
-}
-
-pub fn _json_to_hocon(json: &[u8]) -> Result<Vec<u8>> {
-    let value: serde_json::Value = serde_json::from_slice(json)?;
-    let _hocon = _dump_hocon(value)?;
-    // Ok(serde_hocon::to_vec(&_hocon))
-    todo!("missing hocon serialization support")
-}
-
-fn _dump_hocon(json: serde_json::Value) -> Result<hocon::Hocon> {
-    match json {
-        serde_json::Value::Null => Ok(Hocon::Null),
-        serde_json::Value::Bool(b) => Ok(Hocon::Boolean(b)),
-        serde_json::Value::Number(number) => {
-            if number.is_f64() {
-                let value = number.as_f64().expect("Can't convert hocon f64");
-                Ok(Hocon::Real(value))
-            } else {
-                let value = number.as_i64().expect("Can't convert hocon i64");
-                Ok(Hocon::Integer(value))
-            }
-        }
-        serde_json::Value::String(s) => Ok(Hocon::String(s)),
-        serde_json::Value::Array(vec) => {
-            let hocon_array: Result<Vec<hocon::Hocon>> = vec.into_iter().map(_dump_hocon).collect();
-            Ok(Hocon::Array(hocon_array?))
-        }
-        serde_json::Value::Object(map) => {
-            let mut hm = LinkedHashMap::new();
-
-            for (k, v) in map.into_iter() {
-                let value = _dump_hocon(v)?;
-                hm.insert(k, value);
-            }
-            Ok(Hocon::Hash(hm))
-        }
     }
 }
