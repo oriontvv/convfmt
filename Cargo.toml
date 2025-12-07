@@ -15,7 +15,7 @@ categories = ["command-line-utilities"]
 
 [dependencies]
 anyhow = "1.0.100"
-bson = { version = "3.0.0", features = ["serde"] }
+bson = { version = "3.1.0", features = ["serde"] }
 clap = { version = "4.5.51", features = ["derive"] }
 csv = "1.4.0"
 hjson = "1.1.0"
