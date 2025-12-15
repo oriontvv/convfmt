@@ -53,7 +53,7 @@ pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
             Value::Toml(toml::from_str(s)?)
         }
         Format::Ron => Value::Ron(ron::de::from_bytes(input)?),
-        Format::Json5 => Value::Json5(serde_json::from_slice(input)?),
+        Format::Json5 => Value::Json5(json5::from_str(str::from_utf8(input)?)?),
         Format::Bson => Value::Bson(bson::deserialize_from_slice(input)?),
         Format::Hocon => Value::Hocon(load_hocon(input)?),
         Format::Xml => Value::Xml(load_xml(input)?),
@@ -149,10 +149,17 @@ the_answer = 42
     "boolean": false,
     "the_answer": 42,
 }"#
+                        .to_string(),
+            (Format::Json5, _) => r#"{
+  array: [
+    "a",
+    "b",
+  ],
+  boolean: false,
+  the_answer: 42,
+}"#
                             .to_string(),
-            (Format::Json5, _) => {
-                                r#"{"array":["a","b"],"boolean":false,"the_answer":42}"#.to_string()
-                            }
+
             (Format::Bson, _) => {
                                 "A\0\0\0\u{4}array\0\u{17}\0\0\0\u{2}0\0\u{2}\0\0\0a\0\u{2}1\0\u{2}\0\0\0b\0\0\u{8}boolean\0\0\u{12}the_answer\0*\0\0\0\0\0\0\0\0".to_string()
                             }
@@ -206,13 +213,15 @@ the_answer: 42
         #[case] to_format: Format,
         #[case] is_compact: bool,
     ) {
+        println!("{from_format:?} -> {to_format:?}. is_compact: {is_compact}");
+
         let input = get_test_value(from_format, is_compact);
         let expected_output = get_test_value(to_format, is_compact);
 
         let value = load_input(input.as_bytes(), from_format).unwrap();
         let output = String::from_utf8(dump_value(&value, to_format, is_compact).unwrap()).unwrap();
 
-        assert_eq!(output, expected_output, "{from_format:?} -> {to_format:?}");
+        assert_eq!(output, expected_output);
     }
 
     #[rstest]
