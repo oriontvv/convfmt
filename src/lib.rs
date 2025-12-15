@@ -1,5 +1,6 @@
 mod csv_value;
 mod hocon_value;
+mod javaproperties_value;
 mod jsonl_value;
 mod xml_value;
 
@@ -9,6 +10,7 @@ use serde::Serialize;
 use crate::{
     csv_value::{CsvWrapper, json_to_csv, load_csv},
     hocon_value::{HoconWrapper, load_hocon},
+    javaproperties_value::{JavaPropertiesWrapper, json_to_javaproperties, load_javaproperties},
     jsonl_value::{JsonlWrapper, json_to_jsonl, load_jsonl},
     xml_value::{XmlWrapper, json_to_xml, load_xml},
 };
@@ -26,6 +28,7 @@ pub enum Format {
     Hjson,
     Csv,
     Jsonl,
+    JavaProperties,
 }
 
 #[derive(Debug, Serialize)]
@@ -42,6 +45,7 @@ pub enum Value {
     Hjson(serde_hjson::Value),
     Csv(CsvWrapper),
     Jsonl(JsonlWrapper),
+    JavaProperties(JavaPropertiesWrapper),
 }
 
 pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
@@ -60,6 +64,7 @@ pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
         Format::Hjson => Value::Hjson(serde_hjson::from_slice(input)?),
         Format::Csv => Value::Csv(load_csv(input)?),
         Format::Jsonl => Value::Jsonl(load_jsonl(input)?),
+        Format::JavaProperties => Value::JavaProperties(load_javaproperties(input)?),
     };
     Ok(value)
 }
@@ -93,6 +98,10 @@ pub fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec
         (Format::Jsonl, _) => {
             let json_dumped = serde_json::to_vec(value)?;
             json_to_jsonl(&json_dumped)?
+        }
+        (Format::JavaProperties, _) => {
+            let json_dumped = serde_json::to_vec(value)?;
+            json_to_javaproperties(&json_dumped)?
         }
     };
     Ok(dumped)
@@ -175,6 +184,7 @@ the_answer: 42
                             .to_string(),
             (Format::Csv, _) => unimplemented!("use raw data for tests"),
             (Format::Jsonl, _) => unimplemented!("use raw data for tests"),
+            (Format::JavaProperties, _) => unimplemented!("use raw data for tests"),
         }
     }
 
@@ -285,14 +295,24 @@ the_answer: 42
         false
     )]
     #[case(
-    Format::Json,
-    Format::Jsonl,
-    r#"[{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0},{"age":50,"immortal":false,"name":"Frodo","power":5.0}]"#,
-    r#"{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0}
+        Format::Json,
+        Format::Jsonl,
+        r#"[{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0},{"age":50,"immortal":false,"name":"Frodo","power":5.0}]"#,
+        r#"{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0}
 {"age":50,"immortal":false,"name":"Frodo","power":5.0}
 "#,
-    false
-)]
+        false
+    )]
+    #[case(
+        Format::JavaProperties,
+        Format::Json,
+        r#"age,immortal,name,power,test_empty
+55000, true, Gendalf, 50.0,
+50, false, Frodo, 5.0,
+"#,
+        r#"[{"age":55000,"immortal":true,"name":"Gendalf","power":50.0,"test_empty":null},{"age":50,"immortal":false,"name":"Frodo","power":5.0,"test_empty":null}]"#,
+        true
+    )]
     fn test_raw_convert(
         #[case] from_format: Format,
         #[case] to_format: Format,
