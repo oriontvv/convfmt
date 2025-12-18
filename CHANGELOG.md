@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0] - 2025-12-18
 ### Added
-- jsonl format [#169](https://github.com/oriontvv/convfmt/pull/170)
+- toon format [#169](https://github.com/oriontvv/convfmt/pull/170)
 - updated dependencies
 
 ### Changed
