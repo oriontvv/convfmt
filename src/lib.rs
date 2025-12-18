@@ -26,6 +26,7 @@ pub enum Format {
     Hjson,
     Csv,
     Jsonl,
+    Toon,
 }
 
 #[derive(Debug, Serialize)]
@@ -42,6 +43,7 @@ pub enum Value {
     Hjson(serde_hjson::Value),
     Csv(CsvWrapper),
     Jsonl(JsonlWrapper),
+    Toon(serde_json::Value),
 }
 
 pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
@@ -60,6 +62,10 @@ pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
         Format::Hjson => Value::Hjson(serde_hjson::from_slice(input)?),
         Format::Csv => Value::Csv(load_csv(input)?),
         Format::Jsonl => Value::Jsonl(load_jsonl(input)?),
+        Format::Toon => {
+            let s = std::str::from_utf8(input)?;
+            Value::Toon(toon_format::decode_default(s)?)
+        }
     };
     Ok(value)
 }
@@ -94,6 +100,7 @@ pub fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec
             let json_dumped = serde_json::to_vec(value)?;
             json_to_jsonl(&json_dumped)?
         }
+        (Format::Toon, _) => toon_format::encode_default(value)?.as_bytes().to_vec(),
     };
     Ok(dumped)
 }
@@ -159,7 +166,6 @@ the_answer = 42
   the_answer: 42,
 }"#
                             .to_string(),
-
             (Format::Bson, _) => {
                                 "A\0\0\0\u{4}array\0\u{17}\0\0\0\u{2}0\0\u{2}\0\0\0a\0\u{2}1\0\u{2}\0\0\0b\0\0\u{8}boolean\0\0\u{12}the_answer\0*\0\0\0\0\0\0\0\0".to_string()
                             }
@@ -182,6 +188,10 @@ the_answer: 42
                             .to_string(),
             (Format::Csv, _) => unimplemented!("use raw data for tests"),
             (Format::Jsonl, _) => unimplemented!("use raw data for tests"),
+            (Format::Toon, _) => r#"array[2]: a,b
+boolean: false
+the_answer: 42"#
+                            .to_string(),
         }
     }
 
@@ -208,6 +218,10 @@ the_answer: 42
     #[case(Format::Toml, Format::Xml, true)]
     #[case(Format::Toml, Format::Hjson, true)]
     #[case(Format::Hjson, Format::Json, false)]
+    #[case(Format::Toon, Format::Yaml, false)]
+    #[case(Format::Toon, Format::Json, true)]
+    #[case(Format::Yaml, Format::Toon, false)]
+    #[case(Format::Yaml, Format::Toon, true)]
     fn test_convert_formats(
         #[case] from_format: Format,
         #[case] to_format: Format,

@@ -3,17 +3,18 @@
 
 
 [convfmt](https://github.com/oriontvv/convfmt) is a command line tool in rust which can convert between formats:
-* [json](https://en.wikipedia.org/wiki/JSON)
-* [yaml](https://en.wikipedia.org/wiki/YAML)
-* [toml](https://en.wikipedia.org/wiki/TOML)
-* [ron](https://github.com/ron-rs/ron)
-* [json5](https://en.wikipedia.org/wiki/JSON5)
 * [bson](https://en.wikipedia.org/wiki/BSON)
-* [xml](https://en.wikipedia.org/wiki/XML)
-* [hocon](https://github.com/lightbend/config/blob/main/HOCON.md)
-* [hjson](https://hjson.github.io/)
 * [csv](https://en.wikipedia.org/wiki/Comma-separated_values)
+* [hjson](https://hjson.github.io/)
+* [hocon](https://github.com/lightbend/config/blob/main/HOCON.md)
+* [json](https://en.wikipedia.org/wiki/JSON)
+* [json5](https://en.wikipedia.org/wiki/JSON5)
 * [jsonl](https://jsonltools.com/what-is-jsonl)
+* [ron](https://github.com/ron-rs/ron)
+* [toml](https://en.wikipedia.org/wiki/TOML)
+* [toon](https://toonformat.dev/)
+* [xml](https://en.wikipedia.org/wiki/XML)
+* [yaml](https://en.wikipedia.org/wiki/YAML)
 
 ## Usage:
 
@@ -43,13 +44,14 @@ cargo install convfmt
 ## Many thanks to:
 This tool stands on the shoulders of such giants:
 * [serde](https://crates.io/crates/serde)
+* [bson](https://crates.io/crates/bson)
+* [csv](https://crates.io/crates/csv)
+* [hjson](https://crates.io/crates/hjson)
+* [hocon](https://crates.io/crates/hocon)
+* [json5](https://crates.io/crates/json5)
+* [ron](https://crates.io/crates/ron)
 * [serde_json](https://crates.io/crates/serde_json)
 * [serde_yaml](https://crates.io/crates/serde_yaml)
 * [toml-rs](https://crates.io/crates/toml)
-* [ron](https://crates.io/crates/ron)
-* [json5](https://crates.io/crates/json5)
-* [bson](https://crates.io/crates/bson)
+* [toon-format](https://crates.io/crates/toon-format)
 * [xml](https://crates.io/crates/quick-xml)
-* [hocon](https://crates.io/crates/hocon)
-* [hjson](https://crates.io/crates/hjson)
-* [csv](https://crates.io/crates/csv)
