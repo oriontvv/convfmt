@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2025-12-18
+### Added
+- jsonl format [#169](https://github.com/oriontvv/convfmt/pull/170)
+- updated dependencies
+
+### Changed
+- json5 now always pretty printed
+
+
 ## [1.2.1] - 2025-09-26
 ### Added
 - jsonl format [#150](https://github.com/oriontvv/convfmt/pull/150)
