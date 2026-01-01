@@ -405,7 +405,7 @@ dependencies = [
 
 [[package]]
 name = "convfmt"
-version = "2.0.0"
+version = "2.1.0"
 dependencies = [
  "anyhow",
  "bson",
@@ -415,6 +415,7 @@ dependencies = [
  "hocon",
  "json5",
  "linked-hash-map",
+ "plist",
  "quick-xml",
  "ron",
  "rstest",
