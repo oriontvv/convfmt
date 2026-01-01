@@ -10,6 +10,7 @@
 * [json](https://en.wikipedia.org/wiki/JSON)
 * [json5](https://en.wikipedia.org/wiki/JSON5)
 * [jsonl](https://jsonltools.com/what-is-jsonl)
+* [plist](https://en.wikipedia.org/wiki/Property_list)
 * [ron](https://github.com/ron-rs/ron)
 * [toml](https://en.wikipedia.org/wiki/TOML)
 * [toon](https://toonformat.dev/)
@@ -18,40 +19,38 @@
 
 ## Usage:
 
-```bash
+```
+$ convfmt --help
+cli tool which can convert different formats
+
+Usage: convfmt [OPTIONS] --from <FROM> --to <TO>
+
+Options:
+  -f, --from <FROM>  [possible values: bson, csv, hjson, hocon, json, json5, jsonl, plist, ron, toml, toon, xml, yaml]
+  -t, --to <TO>      [possible values: bson, csv, hjson, hocon, json, json5, jsonl, plist, ron, toml, toon, xml, yaml]
+  -c, --compact
+  -h, --help         Print help
+  -V, --version      Print version
+```
+
+```
 $ cat cfg.yml | convfmt -f yaml -t toml > cfg.toml
 $ convfmt -f json -t json < compact.json > pretty.json
 $ curl https://api.github.com/users/oriontvv | convfmt -f json -t json5 > api.json5
 ```
 
-By default `convfmt` uses `pretty` format(can be disabled with `--compact` option).
-
+By default `convfmt` uses `pretty` format. Can't be compacted with `--compact` option.
 Beware of `null`s, some formats don't support them (e.g. toml).
 
 ## Installation:
-* Download built [binary](https://github.com/oriontvv/convfmt/releases)
+* Download latest [binary](https://github.com/oriontvv/convfmt/releases)
 
 * Install binary using [cargo-binstall](https://github.com/cargo-bins/cargo-binstall)
-```bash
+```
 cargo install cargo-binstall && cargo binstall convfmt
 ```
 
 * Build from sources with [rust](https://www.rust-lang.org/tools/install)
-```bash
+```
 cargo install convfmt
 ```
-
-## Many thanks to:
-This tool stands on the shoulders of such giants:
-* [serde](https://crates.io/crates/serde)
-* [bson](https://crates.io/crates/bson)
-* [csv](https://crates.io/crates/csv)
-* [hjson](https://crates.io/crates/hjson)
-* [hocon](https://crates.io/crates/hocon)
-* [json5](https://crates.io/crates/json5)
-* [ron](https://crates.io/crates/ron)
-* [serde_json](https://crates.io/crates/serde_json)
-* [serde_yaml](https://crates.io/crates/serde_yaml)
-* [toml-rs](https://crates.io/crates/toml)
-* [toon-format](https://crates.io/crates/toon-format)
-* [xml](https://crates.io/crates/quick-xml)
