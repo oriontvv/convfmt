@@ -45,6 +45,6 @@ pub fn json_to_jsonl(json: &[u8]) -> Result<Vec<u8>> {
         }
         Ok(buffer.into_bytes())
     } else {
-        bail!("Invalid json format for jsonl convertation. Expected root Array of items.")
+        bail!("Invalid json format for jsonl conversion. Expected root Array of items.")
     }
 }

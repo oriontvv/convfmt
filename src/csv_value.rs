@@ -94,12 +94,12 @@ pub fn json_to_csv(json: &[u8]) -> Result<Vec<u8>> {
                     }
                 }
             } else {
-                bail!("Invalid json format for csv convertation: {item:?}")
+                bail!("Invalid json format for csv conversion: {item:?}")
             }
             buffer.push('\n');
         }
         Ok(buffer.into_bytes())
     } else {
-        bail!("Invalid json format for csv convertation. Expected root Array of items.")
+        bail!("Invalid json format for csv conversion. Expected root Array of items.")
     }
 }

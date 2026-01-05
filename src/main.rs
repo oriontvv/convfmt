@@ -15,6 +15,7 @@ struct CliArgs {
     to: Format,
 
     #[arg(short, long)]
+    /// Compress output if possible (default = false)
     compact: bool,
 }
 

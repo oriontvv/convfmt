@@ -28,7 +28,7 @@ Usage: convfmt [OPTIONS] --from <FROM> --to <TO>
 Options:
   -f, --from <FROM>  [possible values: bson, csv, hjson, hocon, json, json5, jsonl, plist, ron, toml, toon, xml, yaml]
   -t, --to <TO>      [possible values: bson, csv, hjson, hocon, json, json5, jsonl, plist, ron, toml, toon, xml, yaml]
-  -c, --compact
+  -c, --compact      Compress output if possible (default = false)
   -h, --help         Print help
   -V, --version      Print version
 ```
@@ -39,10 +39,12 @@ $ convfmt -f json -t json < compact.json > pretty.json
 $ curl https://api.github.com/users/oriontvv | convfmt -f json -t json5 > api.json5
 ```
 
-By default `convfmt` uses `pretty` format. Can't be compacted with `--compact` option.
-Beware of `null`s, some formats don't support them (e.g. toml).
+By default `convfmt` tries to use `pretty` format. Enable `--compact` option for compression.
+
+**Beware of `null`s, some formats don't support them (e.g. toml)**
 
 ## Installation:
+There are few ways:
 * Download latest [binary](https://github.com/oriontvv/convfmt/releases)
 
 * Install binary using [cargo-binstall](https://github.com/cargo-bins/cargo-binstall)
@@ -50,7 +52,7 @@ Beware of `null`s, some formats don't support them (e.g. toml).
 cargo install cargo-binstall && cargo binstall convfmt
 ```
 
-* Build from sources with [rust](https://www.rust-lang.org/tools/install)
+* Build local [crate](https://crates.io/crates/convfmt) with [rust](https://www.rust-lang.org/tools/install)
 ```
 cargo install convfmt
 ```
