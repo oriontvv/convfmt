@@ -2582,9 +2582,9 @@ checksum = "756daf9b1013ebe47a8776667b466417e2d4c5679d441c26230efd9ef78692db"
 
 [[package]]
 name = "toon-format"
-version = "0.4.4"
+version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d25e33e50b37f95f3b55b6e664218cac7e1a50f056a75bb4c7a6cccfbc8a8c4"
+checksum = "5933bebbba70ee979314a8ecb021f53075a63984f94f89a10b4bdcf0af6c62b6"
 dependencies = [
  "anyhow",
  "arboard",
