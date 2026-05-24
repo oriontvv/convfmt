@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-05-24
+### Changed
+- reduce dependency bloat, hocon is optional [#173](https://github.com/oriontvv/convfmt/pull/173)
+- bump deps
+
+
 ## [2.1.0] - 2026-01-01
 ### Added
 - plist format [#171](https://github.com/oriontvv/convfmt/pull/172)
