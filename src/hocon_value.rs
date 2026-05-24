@@ -1,5 +1,5 @@
 use anyhow::Result;
-use hocon::{Hocon, HoconLoader};
+use hocon_::{Hocon, HoconLoader};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
