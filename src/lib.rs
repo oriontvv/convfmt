@@ -1,4 +1,5 @@
 mod csv_value;
+#[cfg(feature = "hocon")]
 mod hocon_value;
 mod jsonl_value;
 mod xml_value;
@@ -6,9 +7,10 @@ mod xml_value;
 use anyhow::Result;
 use serde::Serialize;
 
+#[cfg(feature = "hocon")]
+use crate::hocon_value::{HoconWrapper, load_hocon};
 use crate::{
     csv_value::{CsvWrapper, json_to_csv, load_csv},
-    hocon_value::{HoconWrapper, load_hocon},
     jsonl_value::{JsonlWrapper, json_to_jsonl, load_jsonl},
     xml_value::{XmlWrapper, json_to_xml, load_xml},
 };
@@ -18,6 +20,7 @@ pub enum Format {
     Bson,
     Csv,
     Hjson,
+    #[cfg(feature = "hocon")]
     Hocon,
     Json,
     Json5,
@@ -36,6 +39,7 @@ pub enum Value {
     Bson(bson::Bson),
     Csv(CsvWrapper),
     Hjson(serde_hjson::Value),
+    #[cfg(feature = "hocon")]
     Hocon(HoconWrapper),
     Json(serde_json::Value),
     Json5(serde_json::Value),
@@ -53,6 +57,7 @@ pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
         Format::Bson => Value::Bson(bson::deserialize_from_slice(input)?),
         Format::Csv => Value::Csv(load_csv(input)?),
         Format::Hjson => Value::Hjson(serde_hjson::from_slice(input)?),
+        #[cfg(feature = "hocon")]
         Format::Hocon => Value::Hocon(load_hocon(input)?),
         Format::Json => Value::Json(serde_json::from_slice(input)?),
         Format::Json5 => Value::Json5(json5::from_str(str::from_utf8(input)?)?),
@@ -81,7 +86,9 @@ pub fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec
             json_to_csv(&json_dumped)?
         }
         (Format::Hjson, _) => serde_hjson::to_vec(value)?,
+        #[cfg(feature = "hocon")]
         (Format::Hocon, true) => serde_json::to_vec(value)?,
+        #[cfg(feature = "hocon")]
         (Format::Hocon, false) => serde_json::to_vec_pretty(value)?,
         (Format::Json, true) => serde_json::to_vec(value)?,
         (Format::Json, false) => serde_json::to_vec_pretty(value)?,
@@ -136,6 +143,7 @@ mod tests {
   the_answer: 42
 }"#
             }
+            #[cfg(feature = "hocon")]
             (Format::Hocon, _) => {
                 r#"
 array: [a,b]
@@ -246,7 +254,6 @@ the_answer: 42
     #[case(Format::Json5, Format::Json, false)]
     #[case(Format::Json, Format::Bson, false)]
     #[case(Format::Bson, Format::Json5, true)]
-    #[case(Format::Hocon, Format::Json, false)]
     #[case(Format::Xml, Format::Yaml, false)]
     #[case(Format::Toml, Format::Xml, true)]
     #[case(Format::Toml, Format::Hjson, true)]
@@ -271,6 +278,12 @@ the_answer: 42
         let output = String::from_utf8(dump_value(&value, to_format, is_compact).unwrap()).unwrap();
 
         assert_eq!(output, expected_output);
+    }
+
+    #[cfg(feature = "hocon")]
+    #[test]
+    fn test_convert_formats_hocon() {
+        test_convert_formats(Format::Hocon, Format::Json, false);
     }
 
     #[rstest]
@@ -318,13 +331,6 @@ the_answer: 42
         true
     )]
     #[case(
-        Format::Hocon,
-        Format::Json,
-        r#"{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0}"#,
-        r#"{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0}"#,
-        true
-    )]
-    #[case(
         Format::Json,
         Format::Json,
         r#"[{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0},{"age":50,"immortal":false,"name":"Frodo","power":5.0}]"#,
@@ -362,5 +368,17 @@ the_answer: 42
         let output = String::from_utf8(dump_value(&value, to_format, is_compact).unwrap()).unwrap();
 
         assert_eq!(output, expected_output);
+    }
+
+    #[cfg(feature = "hocon")]
+    #[test]
+    fn test_raw_convert_hocon() {
+        test_raw_convert(
+            Format::Hocon,
+            Format::Json,
+            r#"{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0}"#,
+            r#"{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0}"#,
+            true,
+        );
     }
 }
