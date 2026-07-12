@@ -21,10 +21,7 @@ impl Serialize for CsvWrapper {
 pub fn load_csv(csv_bytes: &[u8]) -> Result<CsvWrapper> {
     let mut reader = csv::Reader::from_reader(csv_bytes);
 
-    let header: Vec<String> = match reader.headers() {
-        Ok(headers) => headers.iter().map(|s| s.to_string()).collect(),
-        Err(e) => return Result::Err(e.into()),
-    };
+    let header: Vec<String> = reader.headers()?.iter().map(|s| s.to_string()).collect();
     let mut items = Vec::new();
     for record_result in reader.records() {
         let mut record_map = serde_json::Map::new();
