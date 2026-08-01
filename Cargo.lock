@@ -557,9 +557,9 @@ dependencies = [
 
 [[package]]
 name = "hocon_"
-version = "0.10.12"
+version = "0.10.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f4a2ffaafac7e1835702db99b549c74a5228e3fe6f3181a4bcc818e44520512"
+checksum = "eed44e1d51203d2781160d2081a612cc0c8b5e822667d5478b704e45097db486"
 dependencies = [
  "aho-corasick",
  "java-properties",
