@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - sort-keys option [#210](https://github.com/oriontvv/convfmt/pull/210)
 
 ### Fixed
-- xml empty tag [#211](https://github.com/oriontvv/convfmt/pull/211)
+- xml empty tag [#212](https://github.com/oriontvv/convfmt/pull/212)
 
 
 ## [2.1.1] - 2026-05-24
