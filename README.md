@@ -29,6 +29,7 @@ Options:
   -f, --from <FROM>  [possible values: bson, csv, hjson, hocon, json, json5, jsonl, plist, ron, toml, toon, xml, yaml]
   -t, --to <TO>      [possible values: bson, csv, hjson, hocon, json, json5, jsonl, plist, ron, toml, toon, xml, yaml]
   -c, --compact      Compress output if possible (default = false)
+  -s, --sort-keys    Sort keys of objects (default = false)
   -h, --help         Print help
   -V, --version      Print version
 ```
@@ -36,10 +37,13 @@ Options:
 ```
 $ cat cfg.yml | convfmt -f yaml -t toml > cfg.toml
 $ convfmt -f json -t json < compact.json > pretty.json
+$ convfmt -f json -t json --sort-keys < unordered.json > sorted.json
 $ curl https://api.github.com/users/oriontvv | convfmt -f json -t json5 > api.json5
 ```
 
 By default `convfmt` tries to use `pretty` format. Enable `--compact` option for compression.
+
+By default the original order of keys is preserved. Enable `--sort-keys` option to sort keys of all objects (recursively) in alphabetical order.
 
 **Beware of `null`s, some formats don't support them (e.g. toml)**
 
