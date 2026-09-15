@@ -36,6 +36,26 @@ pub fn load_xml(xml_str: &[u8]) -> Result<XmlWrapper> {
                 current_map = Map::new();
                 current_name = name;
             }
+            Ok(Event::Empty(e)) => {
+                // Self-closing tag, e.g. `<name/>` or `<name attr="v"/>`.
+                let name = e.name().as_ref().to_string();
+                let mut attributes = Map::new();
+
+                for attr in e.attributes() {
+                    let attr = attr?;
+                    let key = attr.key.as_ref().to_string();
+                    let value = attr.value.as_ref().to_string();
+                    attributes.insert(format!("@{key}"), parse_value(&value));
+                }
+
+                let value = if attributes.is_empty() {
+                    JsonValue::Null
+                } else {
+                    JsonValue::Object(attributes)
+                };
+
+                insert_child(&mut current_map, &name, value);
+            }
             Ok(Event::Text(e)) => {
                 buffer = e.into_inner().into_owned();
             }
@@ -54,21 +74,7 @@ pub fn load_xml(xml_str: &[u8]) -> Result<XmlWrapper> {
                 };
 
                 let (mut parent_map, parent_name) = stack.pop().unwrap();
-
-                if parent_map.contains_key(&current_name) {
-                    let existing_value = parent_map.get_mut(&current_name).unwrap();
-                    if let JsonValue::Array(arr) = existing_value {
-                        arr.push(value);
-                    } else {
-                        let old_value = parent_map.remove(&current_name).unwrap();
-                        parent_map.insert(
-                            current_name.clone(),
-                            JsonValue::Array(vec![old_value, value]),
-                        );
-                    }
-                } else {
-                    parent_map.insert(current_name.clone(), value);
-                }
+                insert_child(&mut parent_map, &current_name, value);
 
                 current_map = parent_map;
                 current_name = parent_name;
@@ -82,14 +88,34 @@ pub fn load_xml(xml_str: &[u8]) -> Result<XmlWrapper> {
 
     if stack.is_empty() && !current_map.is_empty() {
         // unpack root item
-        if let Some(root) = current_map.get("root") {
-            Ok(XmlWrapper(root.clone()))
+        if let Some(root) = current_map.remove("root") {
+            // `<root/>` and `<root></root>` should be parsed as Null
+            let root = if root.is_null() {
+                JsonValue::Object(Map::new())
+            } else {
+                root
+            };
+            Ok(XmlWrapper(root))
         } else {
             Ok(XmlWrapper(JsonValue::Object(current_map)))
         }
     } else {
         bail!("Can't read xml");
     }
+}
+
+/// Inserts `value` into 'map' with name `name`.
+fn insert_child(map: &mut Map<String, JsonValue>, name: &str, value: JsonValue) {
+    if !map.contains_key(name) {
+        map.insert(name.to_string(), value);
+        return;
+    }
+    if let Some(JsonValue::Array(arr)) = map.get_mut(name) {
+        arr.push(value);
+        return;
+    }
+    let old = map.remove(name).unwrap();
+    map.insert(name.to_string(), JsonValue::Array(vec![old, value]));
 }
 
 fn parse_value(s: &str) -> JsonValue {
