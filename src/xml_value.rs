@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value as JsonValue};
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct XmlWrapper(serde_json::Value);
+pub struct XmlWrapper(pub serde_json::Value);
 
 pub fn load_xml(xml_str: &[u8]) -> Result<XmlWrapper> {
     let mut reader = Reader::from_reader(xml_str);

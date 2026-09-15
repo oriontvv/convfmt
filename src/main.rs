@@ -3,7 +3,7 @@ use std::io::{self, Read, Write};
 use anyhow::Result;
 use clap::Parser;
 
-use convfmt::{Format, dump_value, load_input};
+use convfmt::{Format, dump_value, load_input, sort_keys};
 
 #[derive(Parser, Debug)]
 #[command(about, version, author)]
@@ -17,12 +17,19 @@ struct CliArgs {
     #[arg(short, long)]
     /// Compress output if possible (default = false)
     compact: bool,
+
+    #[arg(short, long)]
+    /// Sort keys of objects (default = false)
+    sort_keys: bool,
 }
 
 fn run_app() -> Result<()> {
     let args = CliArgs::parse();
     let input = read_input()?;
-    let value = load_input(&input, args.from)?;
+    let mut value = load_input(&input, args.from)?;
+    if args.sort_keys {
+        sort_keys(&mut value);
+    }
     let output = dump_value(&value, args.to, args.compact)?;
     write_output(&output)?;
     Ok(())

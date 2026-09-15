@@ -3,7 +3,7 @@ use hocon_::{Hocon, HoconLoader};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct HoconWrapper(serde_json::Value);
+pub struct HoconWrapper(pub serde_json::Value);
 
 pub fn load_hocon(input: &[u8]) -> Result<HoconWrapper> {
     let s = std::str::from_utf8(input)?;
