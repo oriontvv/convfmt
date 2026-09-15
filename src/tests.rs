@@ -369,6 +369,31 @@ r#"{"age":55000,"immortal":true,"name":"Gendalf the \"White\"","power":50.0}
 "#,
 false
 )]
+#[case(
+    Format::Xml,
+    Format::Json,
+    r#"<root><empty/></root>"#,
+    r#"{"empty":null}"#,
+    true
+)]
+#[case(
+    Format::Xml,
+    Format::Json,
+    r#"<root><empty></empty></root>"#,
+    r#"{"empty":null}"#,
+    true
+)]
+#[case(Format::Xml, Format::Json, r#"<root/>"#, r#"{}"#, true)]
+#[case(Format::Xml, Format::Json, r#"<root></root>"#, r#"{}"#, true)]
+#[case(
+    Format::Json,
+    Format::Xml,
+    r#"{"empty":null}"#,
+    r#"<root><empty/></root>"#,
+    true
+)]
+
+// <root a="1"/>
 fn test_raw_convert(
     #[case] from_format: Format,
     #[case] to_format: Format,
@@ -376,6 +401,7 @@ fn test_raw_convert(
     #[case] expected_output: &str,
     #[case] is_compact: bool,
 ) {
+    println!("checking test, input {:?}", input);
     let value = load_input(input.as_bytes(), from_format).unwrap();
     let output = String::from_utf8(dump_value(&value, to_format, is_compact).unwrap()).unwrap();
 
