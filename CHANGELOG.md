@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.1] - 2026-10-16
+### Fixed
+- binstall link for macos [#213](https://github.com/oriontvv/convfmt/pull/213)
+
+
 ## [2.2.0] - 2026-10-15
 ### Added
 - sort-keys option [#210](https://github.com/oriontvv/convfmt/pull/210)
