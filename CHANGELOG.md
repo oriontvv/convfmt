@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [2.3.1] - 2026-10-19
+### Fixed
+- wasm deploy
+
+
 ## [2.3.0] - 2026-10-18
 ### Added
 - web version: the library is compiled to wasm and published to [github pages](https://oriontvv.github.io/convfmt/) on every release tag
