@@ -49,6 +49,8 @@ By default the original order of keys is preserved. Enable `--sort-keys` option 
 
 ## Installation:
 There are few ways:
+* Use the [web version](https://oriontvv.github.io/convfmt/) without installing anything, convert locally in your browser
+
 * Download latest [binary](https://github.com/oriontvv/convfmt/releases)
 
 * Install binary using [cargo-binstall](https://github.com/cargo-bins/cargo-binstall)

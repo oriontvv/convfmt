@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- web version: the library is compiled to wasm and published to [github pages](https://oriontvv.github.io/convfmt/) on every release tag
+
+### Changed
+- `hocon_` is built without default features: no more `reqwest`/`tokio`/`hyper` in the dependency tree (and hocon became wasm-compatible). The only lost ability is `include url("http://...")` inside hocon input
 
 ## [2.2.1] - 2026-10-16
 ### Fixed

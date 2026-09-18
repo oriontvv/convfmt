@@ -75,6 +75,28 @@ jobs:
           command: clippy
           args: -- -D warnings
 
+  wasm:
+    name: Web version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install wasm target and matching wasm-bindgen-cli
+        run: make web-tools
+      - name: Run tests of the wasm wrapper
+        run: make web-test
+      - name: Build web version
+        run: make web-build
+      - name: Check that the bundle is complete
+        run: |
+          test -f web/static/pkg/convfmt_web.js
+          test -f web/static/pkg/convfmt_web_bg.wasm
+
   sec:
     name: Security audit
     runs-on: ubuntu-latest
