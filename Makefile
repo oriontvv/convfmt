@@ -1,5 +1,5 @@
 
-.PHONY: debug build-release release-linux-musl test clippy clippy-pedantic install install-debug
+.PHONY: debug build-release release-linux-musl test clippy clippy-pedantic install install-debug web-tools web-build web-test web-serve
 
 PROJECT=convfmt
 
@@ -47,6 +47,26 @@ test-linux-musl:
 
 test:
 	cargo test --workspace
+
+# web version: wasm build of the library plus the static page around it.
+# wasm-bindgen-cli has to match the locked wasm-bindgen crate exactly,
+# so the version is taken from web/Cargo.lock instead of being duplicated.
+WASM_BINDGEN_VERSION = $(shell awk '/^name = "wasm-bindgen"$$/ { found = 1; next } found && /^version/ { gsub(/"/, "", $$3); print $$3; exit }' web/Cargo.lock)
+
+web-tools:
+	rustup target add wasm32-unknown-unknown
+	cargo binstall -y wasm-bindgen-cli@$(WASM_BINDGEN_VERSION)
+
+web-build:
+	cd web && cargo build --release --target wasm32-unknown-unknown
+	wasm-bindgen web/target/wasm32-unknown-unknown/release/convfmt_web.wasm \
+		--target web --no-typescript --out-dir web/static/pkg
+
+web-test:
+	cd web && cargo test
+
+web-serve: web-build
+	python3 -m http.server 8000 --directory web/static
 
 coverage:
 	rustup component add llvm-tools-preview

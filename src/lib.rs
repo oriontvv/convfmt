@@ -18,6 +18,8 @@ use crate::{
 
 pub use crate::sort::sort_keys;
 
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 #[derive(Debug, Copy, Clone, PartialEq, clap::ValueEnum)]
 pub enum Format {
     Bson,
@@ -34,6 +36,12 @@ pub enum Format {
     Toon,
     Xml,
     Yaml,
+}
+
+impl Format {
+    pub const fn is_binary(self) -> bool {
+        matches!(self, Format::Bson)
+    }
 }
 
 #[derive(Debug, Serialize)]

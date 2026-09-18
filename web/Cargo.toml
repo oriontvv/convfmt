@@ -1,0 +1,30 @@
+[package]
+name = "convfmt-web"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+authors = ["oriontvv <taranov.vv@gmail.com>"]
+description = "wasm bindings for convfmt, powering the web version"
+homepage = "https://github.com/oriontvv/convfmt/"
+repository = "https://github.com/oriontvv/convfmt/"
+publish = false
+
+# Standalone workspace: keeps `cargo build`/`cargo test`/`cargo publish`
+# of the root `convfmt` package untouched by this wasm-only crate.
+[workspace]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+anyhow = "1.0.102"
+clap = { version = "4.6", features = ["derive"] }
+convfmt = { path = ".." }
+wasm-bindgen = "0.2.126"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
