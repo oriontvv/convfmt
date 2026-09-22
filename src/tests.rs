@@ -100,10 +100,18 @@ the_answer: 42"#
         (Format::Xml, _) => {
             r#"<root><array>a</array><array>b</array><boolean>false</boolean><the_answer>42</the_answer></root>"#
         }
-        (Format::Yaml, _) => {
+        (Format::Yaml, true) => {
             r#"array:
 - a
 - b
+boolean: false
+the_answer: 42
+"#
+        }
+        (Format::Yaml, false) => {
+            r#"array:
+  - a
+  - b
 boolean: false
 the_answer: 42
 "#
@@ -207,6 +215,7 @@ the_answer: 42
 
 #[rstest]
 #[case(Format::Json, Format::Yaml, false)]
+#[case(Format::Json, Format::Yaml, true)]
 #[case(Format::Json, Format::Toml, true)]
 #[case(Format::Json, Format::Toml, false)]
 #[case(Format::Yaml, Format::Json, false)]

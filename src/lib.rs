@@ -128,9 +128,8 @@ pub fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec
         }
         (Format::Yaml, true) => serde_yaml_neo::to_string(value).map(|e| e.into_bytes())?,
         (Format::Yaml, false) => {
-
-            serde_yaml_neo::to_string(value).map(|e| e.into_bytes())?
-        },
+            serde_yaml_neo::to_string_with_indent(value, 2).map(|e| e.into_bytes())?
+        }
     };
     Ok(dumped)
 }
