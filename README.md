@@ -58,6 +58,12 @@ There are few ways:
 $ cat cfg.yml | docker run --rm -i oriontvv/convfmt -f yaml -t toml > cfg.toml
 ```
 
+* Run or install it with [nix](https://nixos.org/download/) (flakes required)
+```
+nix run github:oriontvv/convfmt -- -f yaml -t toml < cfg.yml
+nix profile install github:oriontvv/convfmt
+```
+
 * Install binary using [cargo-binstall](https://github.com/cargo-bins/cargo-binstall)
 ```
 cargo install cargo-binstall && cargo binstall convfmt

@@ -97,6 +97,21 @@ jobs:
           test -f web/static/pkg/convfmt_web.js
           test -f web/static/pkg/convfmt_web_bg.wasm
 
+  nix:
+    name: Nix package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+      - name: Build the flake package
+        run: nix build --print-build-logs
+      - name: Check that the built binary works
+        run: |
+          echo '{"answer": 42}' | ./result/bin/convfmt -f json -t toml
+
   sec:
     name: Security audit
     runs-on: ubuntu-latest
