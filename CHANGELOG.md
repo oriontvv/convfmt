@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [2.3.2] - 2026-10-24
+### Added
+- dockerhub deploy
+
+
 ## [2.3.1] - 2026-10-19
 ### Fixed
 - wasm deploy
