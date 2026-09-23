@@ -53,6 +53,11 @@ There are few ways:
 
 * Download latest [binary](https://github.com/oriontvv/convfmt/releases)
 
+* Run it from [docker](https://hub.docker.com/r/oriontvv/convfmt) without installing anything (`-i` is required, `convfmt` reads stdin)
+```
+$ cat cfg.yml | docker run --rm -i oriontvv/convfmt -f yaml -t toml > cfg.toml
+```
+
 * Install binary using [cargo-binstall](https://github.com/cargo-bins/cargo-binstall)
 ```
 cargo install cargo-binstall && cargo binstall convfmt

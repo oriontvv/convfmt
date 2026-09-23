@@ -1,5 +1,5 @@
 
-.PHONY: debug build-release release-linux-musl test clippy clippy-pedantic install install-debug web-tools web-build web-test web-serve
+.PHONY: debug build-release release-linux-musl test clippy clippy-pedantic install install-debug web-tools web-build web-test web-serve docker-build docker-run
 
 PROJECT=convfmt
 
@@ -67,6 +67,15 @@ web-test:
 
 web-serve: web-build
 	python3 -m http.server 8000 --directory web/static
+
+# local image for the current platform; ci builds the multiarch one, see release.yml
+DOCKER_IMAGE = oriontvv/${PROJECT}
+
+docker-build:
+	docker build -t $(DOCKER_IMAGE):dev .
+
+docker-run: docker-build
+	docker run --rm -i $(DOCKER_IMAGE):dev ${ARGS}
 
 coverage:
 	rustup component add llvm-tools-preview
