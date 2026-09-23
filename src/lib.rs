@@ -128,10 +128,68 @@ pub fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec
         }
         (Format::Yaml, true) => serde_yaml_neo::to_string(value).map(|e| e.into_bytes())?,
         (Format::Yaml, false) => {
-            serde_yaml_neo::to_string_with_indent(value, 2).map(|e| e.into_bytes())?
+            let yaml = serde_yaml_neo::to_string(value)?;
+            indent_yaml_block_sequences(&yaml).into_bytes()
         }
     };
     Ok(dumped)
+}
+
+/// `serde_yaml_neo` (like the underlying libyaml) always emits block sequences
+/// that are mapping values flush with their key, e.g. `key:\n- item`. This adds
+/// the conventional extra 2-space indent (`key:\n  - item`) for the pretty
+/// (non-compact) output, propagating it to everything nested under such a
+/// sequence.
+fn indent_yaml_block_sequences(yaml: &str) -> String {
+    let had_trailing_newline = yaml.ends_with('\n');
+    let mut raw_lines: Vec<&str> = yaml.split('\n').collect();
+    if had_trailing_newline {
+        raw_lines.pop();
+    }
+
+    let mut stack: Vec<usize> = Vec::new();
+    let mut prev: Option<(usize, String)> = None;
+    let mut out_lines: Vec<String> = Vec::with_capacity(raw_lines.len());
+
+    for line in raw_lines {
+        let indent = line.len() - line.trim_start_matches(' ').len();
+        let content = &line[indent..];
+
+        if content.is_empty() {
+            out_lines.push(String::new());
+            continue;
+        }
+
+        let is_seq_item = content == "-" || content.starts_with("- ");
+
+        while let Some(&top) = stack.last() {
+            let still_active = indent > top || (indent == top && is_seq_item);
+            if still_active {
+                break;
+            }
+            stack.pop();
+        }
+
+        if is_seq_item {
+            if let Some((prev_indent, ref prev_content)) = prev {
+                let prev_is_seq_item = prev_content == "-" || prev_content.starts_with("- ");
+                if prev_indent == indent && !prev_is_seq_item && prev_content.ends_with(':') {
+                    stack.push(indent);
+                }
+            }
+        }
+
+        let shift = stack.len() * 2;
+        out_lines.push(format!("{}{}", " ".repeat(indent + shift), content));
+
+        prev = Some((indent, content.to_string()));
+    }
+
+    let mut result = out_lines.join("\n");
+    if had_trailing_newline {
+        result.push('\n');
+    }
+    result
 }
 
 #[cfg(test)]

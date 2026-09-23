@@ -200,10 +200,19 @@ the_answer: 42"#
         (Format::Xml, _) => {
             r#"<root><array>a</array><array>b</array><boolean>false</boolean><nothing/><the_answer>42</the_answer></root>"#
         }
-        (Format::Yaml, _) => {
+        (Format::Yaml, true) => {
             r#"array:
 - a
 - b
+boolean: false
+nothing: null
+the_answer: 42
+"#
+        }
+        (Format::Yaml, false) => {
+            r#"array:
+  - a
+  - b
 boolean: false
 nothing: null
 the_answer: 42
