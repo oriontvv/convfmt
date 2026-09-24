@@ -4,9 +4,9 @@
 //! Data is passed as bytes in both directions, so binary formats (e.g. bson)
 //! work the same way as textual ones.
 
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use clap::ValueEnum;
-use convfmt::{Format, dump_value, load_input};
+use convfmt::{Format, dump_value, ignore_unsupported, load_input};
 use wasm_bindgen::prelude::*;
 
 /// Version of the underlying `convfmt` crate.
@@ -38,8 +38,9 @@ pub fn convert(
     to: &str,
     compact: bool,
     sort_keys: bool,
+    ignore_unsupported: bool,
 ) -> Result<Vec<u8>, JsError> {
-    convert_named(input, from, to, compact, sort_keys)
+    convert_named(input, from, to, compact, sort_keys, ignore_unsupported)
         .map_err(|err| JsError::new(&format!("{err:#}")))
 }
 
@@ -49,25 +50,40 @@ fn convert_named(
     to: &str,
     compact: bool,
     sort_keys: bool,
+    ignore_unsupported: bool,
 ) -> Result<Vec<u8>> {
     let from = parse_format(from)?;
     let to = parse_format(to)?;
-    convert_bytes(input, from, to, compact, sort_keys)
+    convert_bytes(input, from, to, compact, sort_keys, ignore_unsupported)
 }
 
-/// The same pipeline as the cli one in `src/main.rs`.
+/// The same pipeline as the cli one in `src/main.rs`, minus the warning about
+/// skipped values: there is no stderr to put it on.
 fn convert_bytes(
     input: &[u8],
     from: Format,
     to: Format,
     compact: bool,
     sort_keys: bool,
+    ignore: bool,
 ) -> Result<Vec<u8>> {
     let mut value = load_input(input, from)?;
     if sort_keys {
         convfmt::sort_keys(&mut value);
     }
-    dump_value(&value, to, compact)
+    if ignore {
+        ignore_unsupported(&mut value, to);
+    }
+    dump_value(&value, to, compact).with_context(|| {
+        if ignore || to.supports_null() {
+            format!("can't dump to {to}")
+        } else {
+            format!(
+                "can't dump to {to}: it has no representation for `null`, \
+                 enable `--ignore-unsupported` to drop such values"
+            )
+        }
+    })
 }
 
 fn parse_format(format: &str) -> Result<Format> {
@@ -79,7 +95,7 @@ mod tests {
     use super::*;
 
     fn convert_str(input: &str, from: Format, to: Format, compact: bool, sort: bool) -> String {
-        let output = convert_bytes(input.as_bytes(), from, to, compact, sort).unwrap();
+        let output = convert_bytes(input.as_bytes(), from, to, compact, sort, false).unwrap();
         String::from_utf8(output).unwrap()
     }
 
@@ -124,9 +140,47 @@ mod tests {
 
     #[test]
     fn reports_broken_input() {
-        let err = convert_bytes(b"{not json", Format::Json, Format::Yaml, false, false)
-            .expect_err("broken input should fail");
+        let err = convert_bytes(
+            b"{not json",
+            Format::Json,
+            Format::Yaml,
+            false,
+            false,
+            false,
+        )
+        .expect_err("broken input should fail");
         assert!(!format!("{err:#}").is_empty());
+    }
+
+    #[test]
+    fn keeps_nulls_when_the_format_supports_them() {
+        let input = br#"{"a":1,"b":null}"#;
+        let output = convert_bytes(input, Format::Json, Format::Json, true, false, true).unwrap();
+        assert_eq!(String::from_utf8(output).unwrap(), r#"{"a":1,"b":null}"#);
+    }
+
+    #[test]
+    fn drops_nulls_for_toml_on_demand() {
+        let input = br#"{"a":1,"b":null}"#;
+        let output = convert_bytes(input, Format::Json, Format::Toml, true, false, true).unwrap();
+        assert_eq!(String::from_utf8(output).unwrap(), "a = 1\n");
+    }
+
+    #[test]
+    fn suggests_the_option_when_the_dump_fails_on_a_null() {
+        let err = convert_bytes(
+            br#"{"a":1,"b":null}"#,
+            Format::Json,
+            Format::Toml,
+            true,
+            false,
+            false,
+        )
+        .expect_err("toml can't hold a null");
+        assert!(
+            format!("{err:#}").contains("--ignore-unsupported"),
+            "expected a hint about the option, got {err:#}"
+        );
     }
 
     #[test]
