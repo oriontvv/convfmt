@@ -88,8 +88,6 @@ pub fn json_to_csv(json: &[u8]) -> Result<Vec<u8>> {
                         if !value.is_null() {
                             buffer.push_str(&value.to_string());
                         }
-                    } else {
-                        bail!("Missing value for key: in {key:?}")
                     }
                 }
             } else {
