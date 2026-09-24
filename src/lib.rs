@@ -3,6 +3,7 @@ mod csv_value;
 mod hocon_value;
 mod jsonl_value;
 mod sort;
+mod unsupported;
 mod xml_value;
 
 use anyhow::Result;
@@ -17,6 +18,7 @@ use crate::{
 };
 
 pub use crate::sort::sort_keys;
+pub use crate::unsupported::ignore_unsupported;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -41,6 +43,22 @@ pub enum Format {
 impl Format {
     pub const fn is_binary(self) -> bool {
         matches!(self, Format::Bson)
+    }
+
+    pub const fn supports_null(self) -> bool {
+        !matches!(self, Format::Toml | Format::Plist)
+    }
+}
+
+/// Spelled the same way as in `--from`/`--to`, so that messages about a format
+/// use the name the user typed.
+impl std::fmt::Display for Format {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = clap::ValueEnum::to_possible_value(self)
+            .expect("every format is a clap value")
+            .get_name()
+            .to_owned();
+        f.write_str(&name)
     }
 }
 

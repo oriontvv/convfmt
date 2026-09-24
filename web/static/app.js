@@ -5,6 +5,7 @@ const el = {
   to: document.getElementById("to"),
   compact: document.getElementById("compact"),
   sortKeys: document.getElementById("sort-keys"),
+  ignoreUnsupported: document.getElementById("ignore-unsupported"),
   input: document.getElementById("input"),
   output: document.getElementById("output"),
   inputFile: document.getElementById("input-file"),
@@ -97,6 +98,7 @@ function run() {
       el.to.value,
       el.compact.checked,
       el.sortKeys.checked,
+      el.ignoreUnsupported.checked,
     );
     setStatus("");
     if (is_binary(el.to.value)) {
@@ -132,7 +134,7 @@ async function main() {
 
   const rerun = debounce(run, 150);
   el.input.addEventListener("input", rerun);
-  for (const control of [el.compact, el.sortKeys]) {
+  for (const control of [el.compact, el.sortKeys, el.ignoreUnsupported]) {
     control.addEventListener("change", run);
   }
   for (const select of [el.from, el.to]) {

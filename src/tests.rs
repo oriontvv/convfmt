@@ -478,6 +478,14 @@ false
 #[case(Format::Json, Format::Xml, "true", "true", true)]
 #[case(Format::Json, Format::Xml, r#""a & b""#, "a &amp; b", true)]
 #[case(Format::Json, Format::Xml, "null", "", true)]
+// csv: null is an empty cell, which is what `load_csv` reads back as null
+#[case(
+    Format::Json,
+    Format::Csv,
+    r#"[{"a":1,"b":null},{"a":2,"b":3}]"#,
+    "a,b\n1,\n2,3\n",
+    true
+)]
 fn test_raw_convert(
     #[case] from_format: Format,
     #[case] to_format: Format,
@@ -706,6 +714,160 @@ fn test_sort_keys_yaml_tagged() {
     let output = String::from_utf8(dump_value(&value, Format::Yaml, false).unwrap()).unwrap();
 
     assert_eq!(output, "a: 1\nb: !tag\n  y: 2\n  z: 1\n");
+}
+
+/// Nulls at the top level, inside a nested object and inside an array.
+const WITH_NULLS: &str = r#"{"a":1,"b":null,"c":{"d":null,"e":2},"arr":[1,null,2]}"#;
+const WITHOUT_NULLS: &str = r#"{"a":1,"c":{"e":2},"arr":[1,2]}"#;
+
+#[rstest]
+#[case(Format::Toml, false)]
+#[case(Format::Plist, false)]
+#[case(Format::Bson, true)]
+#[case(Format::Csv, true)]
+#[case(Format::Json, true)]
+#[case(Format::Xml, true)]
+#[case(Format::Yaml, true)]
+fn test_supports_null(#[case] format: Format, #[case] expected: bool) {
+    assert_eq!(format.supports_null(), expected);
+}
+
+/// Messages about a format use the name from `--from`/`--to`, not the variant.
+#[rstest]
+#[case(Format::Toml, "toml")]
+#[case(Format::Json5, "json5")]
+fn test_format_display(#[case] format: Format, #[case] expected: &str) {
+    assert_eq!(format.to_string(), expected);
+}
+
+/// Dropping happens only for the formats that can't hold a null.
+#[rstest]
+#[case(Format::Toml, 3, WITHOUT_NULLS)]
+#[case(Format::Plist, 3, WITHOUT_NULLS)]
+#[case(Format::Bson, 0, WITH_NULLS)]
+#[case(Format::Csv, 0, WITH_NULLS)]
+#[case(Format::Json, 0, WITH_NULLS)]
+#[case(Format::Xml, 0, WITH_NULLS)]
+#[case(Format::Yaml, 0, WITH_NULLS)]
+fn test_ignore_unsupported(
+    #[case] to_format: Format,
+    #[case] expected_skipped: usize,
+    #[case] expected_output: &str,
+) {
+    let mut value = load_input(WITH_NULLS.as_bytes(), Format::Json).unwrap();
+    assert_eq!(ignore_unsupported(&mut value, to_format), expected_skipped);
+    let output = String::from_utf8(dump_value(&value, Format::Json, true).unwrap()).unwrap();
+
+    assert_eq!(output, expected_output);
+}
+
+/// The same set of nulls, reached through every source representation.
+#[rstest]
+#[case(Format::Bson, WITHOUT_NULLS)]
+#[case(Format::Hjson, WITHOUT_NULLS)]
+#[case(Format::Json, WITHOUT_NULLS)]
+#[case(Format::Json5, WITHOUT_NULLS)]
+// ron keeps map keys sorted, so the round-trip reorders them
+#[case(Format::Ron, r#"{"a":1,"arr":[1,2],"c":{"e":2}}"#)]
+#[case(Format::Toon, WITHOUT_NULLS)]
+#[case(Format::Xml, WITHOUT_NULLS)]
+#[case(Format::Yaml, WITHOUT_NULLS)]
+fn test_ignore_unsupported_sources(#[case] format: Format, #[case] expected_output: &str) {
+    let json = load_input(WITH_NULLS.as_bytes(), Format::Json).unwrap();
+    let encoded = dump_value(&json, format, true).unwrap();
+
+    let mut value = load_input(&encoded, format).unwrap();
+    assert_eq!(ignore_unsupported(&mut value, Format::Toml), 3);
+    let output = String::from_utf8(dump_value(&value, Format::Json, true).unwrap()).unwrap();
+
+    assert_eq!(output, expected_output);
+}
+
+#[test]
+fn test_ignore_unsupported_csv() {
+    let mut value = load_input(b"a,b\n1,\n", Format::Csv).unwrap();
+    assert_eq!(ignore_unsupported(&mut value, Format::Toml), 1);
+    let output = String::from_utf8(dump_value(&value, Format::Json, true).unwrap()).unwrap();
+
+    assert_eq!(output, r#"[{"a":1}]"#);
+}
+
+#[test]
+fn test_ignore_unsupported_jsonl() {
+    let input = "{\"a\":1,\"b\":null}\n{\"c\":null,\"d\":2}\n";
+    let mut value = load_input(input.as_bytes(), Format::Jsonl).unwrap();
+    assert_eq!(ignore_unsupported(&mut value, Format::Toml), 2);
+    let output = String::from_utf8(dump_value(&value, Format::Xml, true).unwrap()).unwrap();
+
+    assert_eq!(output, "<root><a>1</a></root>\n<root><d>2</d></root>\n");
+}
+
+/// Toml and plist have no null variant to drop, but the walk still has to
+/// reach nested values without breaking them.
+#[rstest]
+#[case(Format::Plist)]
+#[case(Format::Toml)]
+fn test_ignore_unsupported_without_null_variant(#[case] format: Format) {
+    let source = r#"{"a":1,"arr":[{"f":3}],"c":{"e":2}}"#;
+    let json = load_input(source.as_bytes(), Format::Json).unwrap();
+    let encoded = dump_value(&json, format, true).unwrap();
+
+    let mut value = load_input(&encoded, format).unwrap();
+    assert_eq!(ignore_unsupported(&mut value, Format::Toml), 0);
+    let output = String::from_utf8(dump_value(&value, Format::Json, true).unwrap()).unwrap();
+
+    assert_eq!(output, source);
+}
+
+/// Ron spells null either as a unit or as an empty option.
+#[test]
+fn test_ignore_unsupported_ron_unit_and_none() {
+    let mut value =
+        load_input(br#"{"a":(),"b":None,"c":Some(1),"d":[(),2]}"#, Format::Ron).unwrap();
+    assert_eq!(ignore_unsupported(&mut value, Format::Toml), 3);
+    let output = String::from_utf8(dump_value(&value, Format::Json, true).unwrap()).unwrap();
+
+    assert_eq!(output, r#"{"c":1,"d":[2]}"#);
+}
+
+#[test]
+fn test_ignore_unsupported_yaml_tagged() {
+    let mut value = load_input(b"a: !tag\n  b: null\n  c: 2\n", Format::Yaml).unwrap();
+    assert_eq!(ignore_unsupported(&mut value, Format::Toml), 1);
+    let output = String::from_utf8(dump_value(&value, Format::Yaml, false).unwrap()).unwrap();
+
+    assert_eq!(output, "a: !tag\n  c: 2\n");
+}
+
+/// A null root has no container to be removed from, so the dump still fails.
+#[test]
+fn test_ignore_unsupported_keeps_root_null() {
+    let mut value = load_input(b"null", Format::Json).unwrap();
+    assert_eq!(ignore_unsupported(&mut value, Format::Toml), 0);
+
+    assert!(dump_value(&value, Format::Toml, true).is_err());
+}
+
+/// The case the option exists for.
+#[test]
+fn test_ignore_unsupported_enables_toml() {
+    let mut value = load_input(WITH_NULLS.as_bytes(), Format::Json).unwrap();
+    assert!(dump_value(&value, Format::Toml, true).is_err());
+
+    assert_eq!(ignore_unsupported(&mut value, Format::Toml), 3);
+    let output = String::from_utf8(dump_value(&value, Format::Toml, true).unwrap()).unwrap();
+
+    assert_eq!(output, "a = 1\narr = [1, 2]\n\n[c]\ne = 2\n");
+}
+
+#[cfg(feature = "hocon")]
+#[test]
+fn test_ignore_unsupported_hocon() {
+    let mut value = load_input(b"a = 1\nb = null\n", Format::Hocon).unwrap();
+    assert_eq!(ignore_unsupported(&mut value, Format::Toml), 1);
+    let output = String::from_utf8(dump_value(&value, Format::Json, true).unwrap()).unwrap();
+
+    assert_eq!(output, r#"{"a":1}"#);
 }
 
 #[cfg(feature = "hocon")]
