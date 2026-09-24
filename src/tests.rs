@@ -392,8 +392,92 @@ false
     r#"<root><empty/></root>"#,
     true
 )]
-
-// <root a="1"/>
+// xml: attributes of an open tag land next to the tag's own value
+#[case(
+    Format::Xml,
+    Format::Json,
+    r#"<root><item a="1" b="x">text</item></root>"#,
+    r#"{"item":[{"@a":1,"@b":"x"},"text"]}"#,
+    true
+)]
+// xml: attributes of a self-closing tag become the tag's value
+#[case(
+    Format::Xml,
+    Format::Json,
+    r#"<root><item a="1" b="x"/></root>"#,
+    r#"{"item":{"@a":1,"@b":"x"}}"#,
+    true
+)]
+// xml: repeated tags collapse into a single array
+#[case(
+    Format::Xml,
+    Format::Json,
+    r#"<root><a>1</a><a>2</a><a>3</a></root>"#,
+    r#"{"a":[1,2,3]}"#,
+    true
+)]
+// xml: cdata is read as plain text
+#[case(
+    Format::Xml,
+    Format::Json,
+    r#"<root><a><![CDATA[1 < 2 & 3]]></a></root>"#,
+    r#"{"a":"1 < 2 & 3"}"#,
+    true
+)]
+// xml: text next to child tags is kept under `#text`
+#[case(
+    Format::Xml,
+    Format::Json,
+    r#"<root><a><b>1</b>tail</a></root>"#,
+    r##"{"a":{"b":1,"#text":"tail"}}"##,
+    true
+)]
+// xml: declaration and comments are skipped
+#[case(
+    Format::Xml,
+    Format::Json,
+    r#"<?xml version="1.0" encoding="UTF-8"?><!-- comment --><root><a>1</a></root>"#,
+    r#"{"a":1}"#,
+    true
+)]
+// xml: a root tag named something other than `root` is kept as a key
+#[case(
+    Format::Xml,
+    Format::Json,
+    r#"<data><a>1</a></data>"#,
+    r#"{"data":{"a":1}}"#,
+    true
+)]
+// xml: floats are parsed, non-finite ones stay strings
+#[case(
+    Format::Xml,
+    Format::Json,
+    r#"<root><x>1.5</x><y>inf</y></root>"#,
+    r#"{"x":1.5,"y":"inf"}"#,
+    true
+)]
+// json -> xml: `@` keys become attributes, `#text` becomes the tag body
+#[case(
+    Format::Json,
+    Format::Xml,
+    r##"{"item":{"@a":"1","#text":"hello & <bye>"}}"##,
+    r#"<root><item a="1">hello &amp; &lt;bye&gt;</item></root>"#,
+    true
+)]
+// json -> xml: an empty object has no content, so the tag is self-closing
+#[case(
+    Format::Json,
+    Format::Xml,
+    r#"{"item":{}}"#,
+    r#"<root><item/></root>"#,
+    true
+)]
+#[case(Format::Json, Format::Xml, r#"{}"#, r#"<root/>"#, true)]
+// json -> xml: a scalar root has no tag to go into
+#[case(Format::Json, Format::Xml, "42", "42", true)]
+#[case(Format::Json, Format::Xml, "true", "true", true)]
+#[case(Format::Json, Format::Xml, r#""a & b""#, "a &amp; b", true)]
+#[case(Format::Json, Format::Xml, "null", "", true)]
 fn test_raw_convert(
     #[case] from_format: Format,
     #[case] to_format: Format,
@@ -545,6 +629,109 @@ fn test_sort_keys_hocon() {
     let output = String::from_utf8(dump_value(&value, Format::Json, true).unwrap()).unwrap();
 
     assert_eq!(output, r#"{"a":1,"b":2}"#);
+}
+
+#[rstest]
+#[case(Format::Bson, true)]
+#[case(Format::Csv, false)]
+#[case(Format::Json, false)]
+#[case(Format::Xml, false)]
+fn test_is_binary(#[case] format: Format, #[case] expected: bool) {
+    assert_eq!(format.is_binary(), expected);
+}
+
+#[rstest]
+// nothing to read at all
+#[case(Format::Xml, "")]
+// no tags, so there is no root element
+#[case(Format::Xml, "just text")]
+// mismatched closing tag
+#[case(Format::Xml, "<root><a></b></root>")]
+// root tag is never closed
+#[case(Format::Xml, "<root><a>1</a>")]
+#[case(Format::Jsonl, "{not json}")]
+#[case(Format::Csv, "a,b\n\"unterminated")]
+#[case(Format::Json, "{")]
+fn test_load_input_errors(#[case] format: Format, #[case] input: &str) {
+    assert!(load_input(input.as_bytes(), format).is_err());
+}
+
+/// Csv and jsonl both need a root array of objects.
+#[rstest]
+#[case(Format::Csv, r#"{"a":1}"#)]
+#[case(Format::Csv, r#"[1,2]"#)]
+#[case(Format::Jsonl, r#"{"a":1}"#)]
+fn test_dump_value_errors(#[case] to_format: Format, #[case] input: &str) {
+    let value = load_input(input.as_bytes(), Format::Json).unwrap();
+    assert!(dump_value(&value, to_format, true).is_err());
+}
+
+/// Every `sort_*` implementation handles arrays in a separate branch.
+#[rstest]
+#[case(Format::Bson)]
+#[case(Format::Hjson)]
+#[case(Format::Json)]
+#[case(Format::Plist)]
+#[case(Format::Ron)]
+#[case(Format::Toml)]
+#[case(Format::Yaml)]
+fn test_sort_keys_inside_arrays(#[case] format: Format) {
+    let source = r#"{"a":1,"b":[{"d":4,"c":3}]}"#;
+
+    let json = load_input(source.as_bytes(), Format::Json).unwrap();
+    let encoded = dump_value(&json, format, true).unwrap();
+
+    let mut value = load_input(&encoded, format).unwrap();
+    sort_keys(&mut value);
+    let output = String::from_utf8(dump_value(&value, Format::Json, true).unwrap()).unwrap();
+
+    assert_eq!(output, r#"{"a":1,"b":[{"c":3,"d":4}]}"#);
+}
+
+/// Ron options wrap a value that has to be sorted too.
+#[test]
+fn test_sort_keys_ron_option() {
+    let mut value = load_input(br#"{"b":Some({"z":1,"y":2}),"a":1}"#, Format::Ron).unwrap();
+    sort_keys(&mut value);
+    let output = String::from_utf8(dump_value(&value, Format::Json, true).unwrap()).unwrap();
+
+    assert_eq!(output, r#"{"a":1,"b":{"y":2,"z":1}}"#);
+}
+
+/// Same for the value behind a yaml tag.
+#[test]
+fn test_sort_keys_yaml_tagged() {
+    let mut value = load_input(b"b: !tag\n  z: 1\n  y: 2\na: 1\n", Format::Yaml).unwrap();
+    sort_keys(&mut value);
+    let output = String::from_utf8(dump_value(&value, Format::Yaml, false).unwrap()).unwrap();
+
+    assert_eq!(output, "a: 1\nb: !tag\n  y: 2\n  z: 1\n");
+}
+
+#[cfg(feature = "hocon")]
+#[rstest]
+#[case(true, r#"{"a":1,"b":[2,3]}"#)]
+#[case(
+    false,
+    r#"{
+  "a": 1,
+  "b": [
+    2,
+    3
+  ]
+}"#
+)]
+fn test_dump_hocon(#[case] is_compact: bool, #[case] expected: &str) {
+    let value = load_input(br#"{"a":1,"b":[2,3]}"#, Format::Json).unwrap();
+    let output = String::from_utf8(dump_value(&value, Format::Hocon, is_compact).unwrap()).unwrap();
+
+    assert_eq!(output, expected);
+}
+
+#[cfg(feature = "hocon")]
+#[test]
+fn test_load_hocon_errors() {
+    assert!(load_input(b"a = ${undefined}", Format::Hocon).is_err());
 }
 
 #[cfg(feature = "hocon")]
