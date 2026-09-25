@@ -79,15 +79,14 @@ pub fn json_to_csv(json: &[u8]) -> Result<Vec<u8>> {
                 }
                 let mut first = true;
                 for key in keys {
-                    if let Some(value) = items.get(&key) {
-                        if first {
-                            first = false;
-                        } else {
-                            buffer.push(',');
-                        }
-                        if !value.is_null() {
-                            buffer.push_str(&value.to_string());
-                        }
+                    let value = items.get(&key).unwrap();
+                    if first {
+                        first = false;
+                    } else {
+                        buffer.push(',');
+                    }
+                    if !value.is_null() {
+                        buffer.push_str(&value.to_string());
                     }
                 }
             } else {
