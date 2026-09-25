@@ -210,5 +210,4 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Formula/convfmt.rb
           git commit -m "convfmt ${GITHUB_REF#refs/tags/}" || echo "No changes to commit"
-          git push
-
+          git push https://x-access-token:${{secrets.HOMEBREW_TAP_TOKEN}}@github.com/oriontvv/homebrew-tap.git
