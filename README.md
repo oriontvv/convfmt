@@ -53,6 +53,11 @@ By default the original order of keys is preserved. Enable `--sort-keys` option 
 There are few ways:
 * Use the [web version](https://oriontvv.github.io/convfmt/) without installing anything, convert locally in your browser
 
+* Macos [homebrew tap](https://github.com/oriontvv/homebrew-tap)
+```
+brew install oriontvv/tap/convfmt
+```
+
 * Download latest [binary](https://github.com/oriontvv/convfmt/releases)
 
 * Run it from [docker](https://hub.docker.com/r/oriontvv/convfmt) without installing anything (`-i` is required, `convfmt` reads stdin)
@@ -67,5 +72,5 @@ cargo install cargo-binstall && cargo binstall convfmt
 
 * Build local [crate](https://crates.io/crates/convfmt) with [rust](https://www.rust-lang.org/tools/install)
 ```
-cargo install convfmt
+cargo install --git https://github.com/oriontvv/convfmt
 ```

@@ -128,20 +128,87 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # - name: Bump personal tap formula
-    #   uses: mislav/bump-homebrew-formula-action@v1
-    #   if: "matrix.os == 'macos-latest' && !contains(github.ref, '-')" # skip prereleases
-    #   env:
-    #     COMMITTER_TOKEN: ${{ secrets.BREW_TOKEN }}
-    #   with:
-    #     formula-name: convfmt
-    #     homebrew-tap: oriontvv/tap
-    #     download-url: https://github.com/oriontvv/convfmt/releases/download/${{ steps.get_version.outputs.version }}/convfmt-mac.tar.gz
 
-    # - name: Bump homebrew-core formula
-    #   uses: mislav/bump-homebrew-formula-action@v1
-    #   if: "matrix.os == 'macos-latest' && !contains(github.ref, '-')" # skip prereleases
-    #   env:
-    #     COMMITTER_TOKEN: ${{ secrets.BREW_TOKEN }}
-    #   with:
-    #     formula-name: convfmt
+  bump-homebrew:
+    needs: release-github
+    runs-on: ubuntu-latest
+    # Пропускаем pre-release (например, 2.3.4-rc1)
+    if: ${{ !contains(github.ref, '-') || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download release assets and compute SHA256
+        id: hashes
+        run: |
+          set -e
+          VERSION="${{ steps.version.outputs.tag }}"
+          BASE_URL="https://github.com/oriontvv/convfmt/releases/download/${VERSION}"
+
+          curl -fsSL "${BASE_URL}/convfmt-mac.tar.gz" -o convfmt-mac.tar.gz
+          curl -fsSL "${BASE_URL}/convfmt-linux-musl.tar.gz" -o convfmt-linux-musl.tar.gz
+
+          echo "mac=$(sha256sum convfmt-mac.tar.gz | awk '{print $1}')" >> $GITHUB_OUTPUT
+          echo "linux=$(sha256sum convfmt-linux-musl.tar.gz | awk '{print $1}')" >> $GITHUB_OUTPUT
+
+      - name: Generate formula
+        id: formula
+        run: |
+          VERSION="${{ steps.version.outputs.tag }}"
+          SHA_MAC="${{ steps.hashes.outputs.mac }}"
+          SHA_LINUX="${{ steps.hashes.outputs.linux }}"
+
+          cat > convfmt.rb <<EOF
+          class Convfmt < Formula
+            desc "CLI tool which can convert different formats"
+            homepage "https://github.com/oriontvv/convfmt"
+            version "${VERSION}"
+            license "Apache-2.0"
+
+            on_macos do
+              url "https://github.com/oriontvv/convfmt/releases/download/${VERSION}/convfmt-mac.tar.gz"
+              sha256 "${SHA_MAC}"
+            end
+
+            on_linux do
+              url "https://github.com/oriontvv/convfmt/releases/download/${VERSION}/convfmt-linux-musl.tar.gz"
+              sha256 "${SHA_LINUX}"
+            end
+
+            def install
+              bin.install "convfmt"
+            end
+
+            test do
+              assert_match version.to_s, shell_output("#{bin}/convfmt --version")
+            end
+          end
+          EOF
+
+          echo "Формула сгенерирована:"
+          cat convfmt.rb
+
+      - name: Checkout tap repository
+        uses: actions/checkout@v7
+        with:
+          repository: oriontvv/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update formula in tap
+        run: |
+          cp convfmt.rb homebrew-tap/Formula/convfmt.rb
+          cd homebrew-tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/convfmt.rb
+          git commit -m "convfmt ${GITHUB_REF#refs/tags/}" || echo "No changes to commit"
+          git push
+
