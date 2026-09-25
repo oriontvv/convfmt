@@ -132,8 +132,6 @@ jobs:
   bump-homebrew:
     needs: release-github
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     # Пропускаем pre-release (например, 2.3.4-rc1)
     if: ${{ !contains(github.ref, '-') || github.event_name == 'workflow_dispatch' }}
 
@@ -203,6 +201,7 @@ jobs:
           repository: oriontvv/homebrew-tap
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           path: homebrew-tap
+          persist-credentials: false
 
       - name: Update formula in tap
         run: |
