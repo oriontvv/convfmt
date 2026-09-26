@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Dotenv format
+- Dotenv format [#221](https://github.com/oriontvv/convfmt/pull/221)
 
 
 ## [2.3.4] - 2026-10-25
