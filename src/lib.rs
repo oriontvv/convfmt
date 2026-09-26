@@ -26,6 +26,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub enum Format {
     Bson,
     Csv,
+    Dotenv,
     Hjson,
     #[cfg(feature = "hocon")]
     Hocon,
@@ -46,7 +47,7 @@ impl Format {
     }
 
     pub const fn supports_null(self) -> bool {
-        !matches!(self, Format::Toml | Format::Plist)
+        !matches!(self, Format::Toml | Format::Plist | Format::Dotenv)
     }
 }
 
@@ -67,6 +68,7 @@ impl std::fmt::Display for Format {
 pub enum Value {
     Bson(bson::Bson),
     Csv(CsvWrapper),
+    Dotenv(serde_envfile::Value),
     Hjson(serde_hjson::Value),
     #[cfg(feature = "hocon")]
     Hocon(HoconWrapper),
@@ -85,6 +87,7 @@ pub fn load_input(input: &[u8], format: Format) -> Result<Value> {
     let value = match format {
         Format::Bson => Value::Bson(bson::deserialize_from_slice(input)?),
         Format::Csv => Value::Csv(load_csv(input)?),
+        Format::Dotenv => Value::Dotenv(serde_envfile::from_str(str::from_utf8(input)?)?),
         Format::Hjson => Value::Hjson(serde_hjson::from_slice(input)?),
         #[cfg(feature = "hocon")]
         Format::Hocon => Value::Hocon(load_hocon(input)?),
@@ -114,6 +117,7 @@ pub fn dump_value(value: &Value, format: Format, is_compact: bool) -> Result<Vec
             let json_dumped = serde_json::to_vec(value)?;
             json_to_csv(&json_dumped)?
         }
+        (Format::Dotenv, _) => serde_envfile::to_string(value).map(|e| e.into_bytes())?,
         (Format::Hjson, _) => serde_hjson::to_vec(value)?,
         #[cfg(feature = "hocon")]
         (Format::Hocon, true) => serde_json::to_vec(value)?,

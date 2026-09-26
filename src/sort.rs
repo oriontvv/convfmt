@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 use std::mem::take;
+use std::ops::DerefMut;
 
 use crate::Value;
 
@@ -8,6 +9,7 @@ pub fn sort_keys(value: &mut Value) {
     match value {
         Value::Bson(v) => sort_bson(v),
         Value::Csv(v) => sort_json(&mut v.items),
+        Value::Dotenv(v) => sort_dotenv(v),
         Value::Hjson(v) => sort_hjson(v),
         #[cfg(feature = "hocon")]
         Value::Hocon(v) => sort_json(&mut v.0),
@@ -37,6 +39,16 @@ fn sort_bson(value: &mut bson::Bson) {
         bson::Bson::Array(items) => items.iter_mut().for_each(sort_bson),
         _ => (),
     }
+}
+
+fn sort_dotenv(value: &mut serde_envfile::Value) {
+    let mut entries: Vec<(String, String)> = value
+        .deref_mut()
+        .iter()
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
+    entries.sort_by(|(l, _), (r, _)| l.cmp(r));
+    *value = entries.into_iter().collect();
 }
 
 fn sort_hjson(value: &mut serde_hjson::Value) {
