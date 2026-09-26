@@ -5,6 +5,7 @@
 [convfmt](https://github.com/oriontvv/convfmt) is a command line tool in rust which can convert between formats:
 * [bson](https://en.wikipedia.org/wiki/BSON)
 * [csv](https://en.wikipedia.org/wiki/Comma-separated_values)
+* [dotenv](https://www.dotenv.org/docs/security/env.html)
 * [hjson](https://hjson.github.io/)
 * [hocon](https://github.com/lightbend/config/blob/main/HOCON.md)
 * [json](https://en.wikipedia.org/wiki/JSON)
@@ -26,8 +27,8 @@ cli tool which can convert different formats
 Usage: convfmt [OPTIONS] --from <FROM> --to <TO>
 
 Options:
-  -f, --from <FROM>         [possible values: bson, csv, hjson, hocon, json, json5, jsonl, plist, ron, toml, toon, xml, yaml]
-  -t, --to <TO>             [possible values: bson, csv, hjson, hocon, json, json5, jsonl, plist, ron, toml, toon, xml, yaml]
+  -f, --from <FROM>         [possible values: bson, csv, dotenv, hjson, hocon, json, json5, jsonl, plist, ron, toml, toon, xml, yaml]
+  -t, --to <TO>             [possible values: bson, csv, dotenv, hjson, hocon, json, json5, jsonl, plist, ron, toml, toon, xml, yaml]
   -c, --compact             Compress output if possible (default = false)
   -s, --sort-keys           Sort keys of objects (default = false)
   -i, --ignore-unsupported  Drop values the target format can't represent, e.g. `null` for toml (default = false)

@@ -8,6 +8,7 @@ fn get_test_value(format: Format, is_compact: bool) -> String {
             "A\0\0\0\u{4}array\0\u{17}\0\0\0\u{2}0\0\u{2}\0\0\0a\0\u{2}1\0\u{2}\0\0\0b\0\0\u{8}boolean\0\0\u{12}the_answer\0*\0\0\0\0\0\0\0\0"
         }
         (Format::Csv, _) => unimplemented!("use raw data for tests"),
+        (Format::Dotenv, _) => unimplemented!("use raw data for tests"),
         (Format::Hjson, _) => {
             r#"{
   array:
@@ -120,6 +121,7 @@ fn get_test_value_with_null(format: Format, is_compact: bool) -> String {
             "J\0\0\0\u{4}array\0\u{17}\0\0\0\u{2}0\0\u{2}\0\0\0a\0\u{2}1\0\u{2}\0\0\0b\0\0\u{8}boolean\0\0\u{a}nothing\0\u{12}the_answer\0*\0\0\0\0\0\0\0\0"
         }
         (Format::Csv, _) => unimplemented!("use raw data for tests"),
+        (Format::Dotenv, _) => unimplemented!("dotenv has no null representation"),
         (Format::Hjson, _) => {
             r#"{
   array:
@@ -615,6 +617,35 @@ a: 1"#,
     r#"[{"a":1,"b":2}]"#,
     true
 )]
+#[case(
+    Format::Dotenv,
+    Format::Json,
+    r#"ARRAY=a,b
+STRING=string
+THE_ANSWER=42
+"#,
+    r#"{"array":"a,b","string":"string","the_answer":"42"}"#,
+    true
+)]
+#[case(
+    Format::Dotenv,
+    Format::Json,
+    r#"THE_ANSWER=42
+ARRAY=a,b
+STRING=string
+"#,
+    r#"{"array":"a,b","string":"string","the_answer":"42"}"#,
+    true
+)]
+#[case(
+    Format::Json,
+    Format::Dotenv,
+    r#"{"array":["a","b"],"string":"string","the_answer":42}"#,
+    r#"ARRAY="a","b"
+STRING="string"
+THE_ANSWER=42"#,
+    true
+)]
 fn test_sort_keys(
     #[case] from_format: Format,
     #[case] to_format: Format,
@@ -728,6 +759,7 @@ const WITHOUT_NULLS: &str = r#"{"a":1,"c":{"e":2},"arr":[1,2]}"#;
 #[case(Format::Json, true)]
 #[case(Format::Xml, true)]
 #[case(Format::Yaml, true)]
+#[case(Format::Dotenv, false)]
 fn test_supports_null(#[case] format: Format, #[case] expected: bool) {
     assert_eq!(format.supports_null(), expected);
 }
