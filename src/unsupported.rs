@@ -20,7 +20,7 @@ fn drop_nulls(value: &mut Value) -> usize {
     match value {
         Value::Bson(v) => drop_bson(v),
         Value::Csv(v) => drop_json(&mut v.items),
-        Value::Dotenv(v) => drop_dotenv(v),
+        Value::Dotenv(_) => 0,
         Value::Hjson(v) => drop_hjson(v),
         #[cfg(feature = "hocon")]
         Value::Hocon(v) => drop_json(&mut v.0),
@@ -57,11 +57,6 @@ fn drop_bson(value: &mut bson::Bson) -> usize {
         }
         _ => 0,
     }
-}
-
-/// Nothing to do, null values are not supported
-fn drop_dotenv(_value: &mut serde_envfile::Value) -> usize {
-    0
 }
 
 /// `Undefined` is deprecated, but it means the same "there is no value" as `Null`.

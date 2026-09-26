@@ -47,7 +47,7 @@ impl Format {
     }
 
     pub const fn supports_null(self) -> bool {
-        !matches!(self, Format::Toml | Format::Plist | Format::Dotenv)
+        !matches!(self, Format::Toml | Format::Plist)
     }
 }
 

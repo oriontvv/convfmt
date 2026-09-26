@@ -759,7 +759,7 @@ const WITHOUT_NULLS: &str = r#"{"a":1,"c":{"e":2},"arr":[1,2]}"#;
 #[case(Format::Json, true)]
 #[case(Format::Xml, true)]
 #[case(Format::Yaml, true)]
-#[case(Format::Dotenv, false)]
+#[case(Format::Dotenv, true)]
 fn test_supports_null(#[case] format: Format, #[case] expected: bool) {
     assert_eq!(format.supports_null(), expected);
 }
@@ -822,6 +822,15 @@ fn test_ignore_unsupported_csv() {
     let output = String::from_utf8(dump_value(&value, Format::Json, true).unwrap()).unwrap();
 
     assert_eq!(output, r#"[{"a":1}]"#);
+}
+
+#[test]
+fn test_ignore_unsupported_dotenv() {
+    let mut value = load_input(b"A=1\nB=\n", Format::Dotenv).unwrap();
+    assert_eq!(ignore_unsupported(&mut value, Format::Toml), 0);
+    let output = String::from_utf8(dump_value(&value, Format::Json, true).unwrap()).unwrap();
+
+    assert_eq!(output, r#"{"a":"1","b":""}"#);
 }
 
 #[test]
