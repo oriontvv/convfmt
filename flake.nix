@@ -1,5 +1,5 @@
 {
-  description = "cli tool which can convert different formats";
+  description = "cli tool to convert between different formats";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
