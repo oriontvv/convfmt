@@ -28,7 +28,7 @@ jobs:
       # `latest` is moved only by stable tags, prereleases (1.2.3-rc1) get just their own tag
       - name: Docker tags and labels
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.IMAGE }}
           tags: |
