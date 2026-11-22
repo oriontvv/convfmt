@@ -6,7 +6,6 @@ license = "Apache-2.0"
 authors = ["oriontvv <taranov.vv@gmail.com>"]
 description = "cli tool which can convert different formats"
 homepage = "https://github.com/oriontvv/convfmt/"
-repository = "https://github.com/oriontvv/convfmt/"
 documentation = "https://docs.rs/convfmt"
 keywords = ["cli", "format", "convert", "json", "toml"]
 categories = ["command-line-utilities"]
