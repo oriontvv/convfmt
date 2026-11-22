@@ -207,7 +207,6 @@ dependencies = [
  "bson",
  "clap",
  "csv",
- "hjson",
  "hocon_",
  "json5",
  "linked-hash-map",
@@ -365,18 +364,6 @@ name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
-
-[[package]]
-name = "hjson"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4521a5efb62a44633debfe5b1abb810ea00973d677bae21e81f0ff06800b9312"
-dependencies = [
- "clap",
- "serde",
- "serde-hjson",
- "serde_json",
-]
 
 [[package]]
 name = "hocon_"
@@ -992,9 +979,9 @@ checksum = "7d56353a2a665ad0f41a421187180aab746c8c325620617ad883a99a1cbe66d2"
 
 [[package]]
 name = "toon-format"
-version = "0.5.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f89570c1a68d73941f728cca32a4345b2ffca36667ad921af336c60309a3e7e"
+checksum = "ee91127810858e0dbcecb2947a0074a7d18bd191d56bcb581f5962374aed9fb8"
 dependencies = [
  "indexmap",
  "serde",
