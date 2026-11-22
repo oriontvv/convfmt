@@ -128,10 +128,10 @@ fn sort_toml(value: &mut toml::Value) {
     }
 }
 
-fn sort_yaml(value: &mut serde_yaml::Value) {
+fn sort_yaml(value: &mut yaml_serde::Value) {
     match value {
-        serde_yaml::Value::Mapping(mapping) => {
-            let mut entries: Vec<(serde_yaml::Value, serde_yaml::Value)> =
+        yaml_serde::Value::Mapping(mapping) => {
+            let mut entries: Vec<(yaml_serde::Value, yaml_serde::Value)> =
                 take(mapping).into_iter().collect();
             entries.sort_by(|(left, _), (right, _)| {
                 left.partial_cmp(right).unwrap_or(Ordering::Equal)
@@ -144,8 +144,8 @@ fn sort_yaml(value: &mut serde_yaml::Value) {
                 })
                 .collect();
         }
-        serde_yaml::Value::Sequence(items) => items.iter_mut().for_each(sort_yaml),
-        serde_yaml::Value::Tagged(tagged) => sort_yaml(&mut tagged.value),
+        yaml_serde::Value::Sequence(items) => items.iter_mut().for_each(sort_yaml),
+        yaml_serde::Value::Tagged(tagged) => sort_yaml(&mut tagged.value),
         _ => (),
     }
 }
