@@ -156,10 +156,10 @@ fn drop_toml(value: &mut toml::Value) -> usize {
     }
 }
 
-fn drop_yaml(value: &mut serde_yaml::Value) -> usize {
+fn drop_yaml(value: &mut yaml_serde::Value) -> usize {
     match value {
-        serde_yaml::Value::Mapping(mapping) => {
-            let entries: Vec<(serde_yaml::Value, serde_yaml::Value)> =
+        yaml_serde::Value::Mapping(mapping) => {
+            let entries: Vec<(yaml_serde::Value, yaml_serde::Value)> =
                 take(mapping).into_iter().collect();
             let before = entries.len();
             let mut dropped = 0;
@@ -173,12 +173,12 @@ fn drop_yaml(value: &mut serde_yaml::Value) -> usize {
                 .collect();
             dropped + (before - mapping.len())
         }
-        serde_yaml::Value::Sequence(items) => {
+        yaml_serde::Value::Sequence(items) => {
             let before = items.len();
             items.retain(|item| !item.is_null());
             (before - items.len()) + items.iter_mut().map(drop_yaml).sum::<usize>()
         }
-        serde_yaml::Value::Tagged(tagged) => drop_yaml(&mut tagged.value),
+        yaml_serde::Value::Tagged(tagged) => drop_yaml(&mut tagged.value),
         _ => 0,
     }
 }
